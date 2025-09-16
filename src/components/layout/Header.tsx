@@ -38,9 +38,9 @@ const Header = ({ session }: { session: Session | null }) => {
   };
 
   return (
-    <header className="sticky top-0 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 z-50">
+    <header className="sticky top-0 flex h-24 items-center justify-between border-b bg-background px-4 md:px-6 z-50">
       <Link to="/" className="flex items-center gap-2 font-semibold">
-        <img src="/logo.png" alt="MERT AI Logo" className="h-10" />
+        <img src="/logo.png" alt="MERT AI Logo" className="h-20" />
         <span className="text-xl font-bold">MERT AI</span>
       </Link>
 
