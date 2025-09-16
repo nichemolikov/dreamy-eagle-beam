@@ -1,7 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, Wrench } from "lucide-react";
+import { Menu, Wolf } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
@@ -38,23 +38,28 @@ const Header = ({ session }: { session: Session | null }) => {
   };
 
   return (
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
+    <header className="sticky top-0 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 z-50">
       <Link to="/" className="flex items-center gap-2 font-semibold">
-        <Wrench className="h-6 w-6 text-primary" />
-        <span className="">MERT AI</span>
+        <Wolf className="h-8 w-8 text-primary" />
+        <span className="text-xl font-bold">MERT AI</span>
       </Link>
-      <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-        <NavLinks className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6" />
-        <div className="ml-auto flex-1 sm:flex-initial">
+
+      <div className="hidden md:flex justify-center">
+        <NavLinks className="flex items-center gap-5 text-sm lg:gap-6" />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2">
           {session ? (
-            <div className="flex items-center gap-2">
+            <>
               <Button onClick={() => navigate("/dashboard")} variant="outline">Табло</Button>
               <Button onClick={handleLogout}>Изход</Button>
-            </div>
+            </>
           ) : (
             <Button onClick={() => navigate("/login")}>Вход за клиенти</Button>
           )}
         </div>
+        
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="shrink-0 md:hidden">
