@@ -13,25 +13,33 @@ const allServices = [
 ];
 
 const Services = () => (
-  <div className="container mx-auto p-4 md:p-8">
-    <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-      <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">Нашите услуги</h1>
-      <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
-        Ние предоставяме пълна гама от услуги за ремонт и поддръжка на автомобили, за да поддържате автомобила си в отлично състояние.
-      </p>
-    </div>
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {allServices.map((service) => (
-        <Card key={service.title}>
-          <CardHeader className="flex flex-row items-center gap-4">
-            {service.icon}
-            <CardTitle>{service.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{service.description}</p>
-          </CardContent>
-        </Card>
-      ))}
+  <div>
+    <section
+      className="relative w-full h-[30vh] bg-cover bg-center"
+      style={{ backgroundImage: "url(https://mertai.bg/wp-content/uploads/2025/09/viber_image_2025-07-29_13-43-45-541.jpg)" }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white p-4">
+        <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">Нашите услуги</h1>
+        <p className="max-w-[900px] md:text-xl/relaxed mt-2 text-gray-200">
+          Ние предоставяме пълна гама от услуги за ремонт и поддръжка на автомобили, за да поддържате автомобила си в отлично състояние.
+        </p>
+      </div>
+    </section>
+    <div className="container mx-auto p-4 md:p-8">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {allServices.map((service) => (
+          <Card key={service.title}>
+            <CardHeader className="flex flex-row items-center gap-4">
+              {service.icon}
+              <CardTitle>{service.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{service.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   </div>
 );
