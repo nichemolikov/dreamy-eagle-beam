@@ -14,6 +14,11 @@ const Footer = () => {
             <span className="text-3xl font-semibold text-[#f1f1f1]">
               MERT AI
             </span>
+            <img
+              src="/logo.png"
+              alt="MERT AI Logo"
+              className="h-24"
+            />
           </div>
           <nav className="flex flex-wrap justify-center gap-4 md:gap-6">
             <Link to="/about" className="text-sm hover:underline text-[#f1f1f1]">
