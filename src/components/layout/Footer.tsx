@@ -8,10 +8,10 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Wrench className="h-6 w-6 text-primary" />
-            <span className="font-semibold">AutoRepair Pro</span>
+            <span className="font-semibold">MERT AI</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} AutoRepair Pro. Всички права запазени.
+            © {new Date().getFullYear()} MERT AI. Всички права запазени.
           </p>
           <nav className="flex gap-4">
             <Link to="/about" className="text-sm hover:underline">За нас</Link>
