@@ -1,4 +1,3 @@
-import { Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -7,7 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 md:px-6 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Wrench className="h-6 w-6 text-primary" />
+            <img src="/logo.png" alt="MERT AI Logo" className="h-8" />
             <span className="font-semibold">MERT AI</span>
           </div>
           <p className="text-sm text-muted-foreground">
