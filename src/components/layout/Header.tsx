@@ -38,19 +38,17 @@ const Header = ({ session }: { session: Session | null }) => {
   };
 
   return (
-    <header className="sticky top-0 flex h-24 items-center justify-between border-b border-gray-700 bg-[#211f1f]/80 px-4 md:px-6 z-50 backdrop-blur-sm">
+    <header className="sticky top-0 flex h-24 items-center justify-between border-b border-gray-700 bg-[#211f1f] px-4 md:px-6 z-50">
+      <Link to="/" className="flex items-center gap-2 font-semibold">
+        <img src="/logo.png" alt="MERT AI Logo" className="h-20" />
+        <span className="text-xl font-bold text-[#f1f1f1]">MERT AI</span>
+      </Link>
+
+      <div className="hidden md:flex justify-center">
+        <NavLinks className="flex items-center gap-5 text-sm lg:gap-6" />
+      </div>
+
       <div className="flex items-center gap-4">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 md:hidden text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Превключване на навигационното меню</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <NavLinks className="grid gap-6 text-lg font-medium" />
-          </SheetContent>
-        </Sheet>
         <div className="hidden md:flex items-center gap-2">
           {session ? (
             <>
@@ -61,16 +59,19 @@ const Header = ({ session }: { session: Session | null }) => {
             <Button onClick={() => navigate("/login")} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Вход за клиенти</Button>
           )}
         </div>
+        
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="shrink-0 md:hidden text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Превключване на навигационното меню</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <NavLinks className="grid gap-6 text-lg font-medium" />
+          </SheetContent>
+        </Sheet>
       </div>
-
-      <div className="hidden md:flex justify-center">
-        <NavLinks className="flex items-center gap-5 text-sm lg:gap-6" />
-      </div>
-      
-      <Link to="/" className="flex items-center gap-2 font-semibold">
-        <span className="text-xl font-bold text-[#f1f1f1]">MERT AI</span>
-        <img src="/logo.png" alt="MERT AI Logo" className="h-20" />
-      </Link>
     </header>
   );
 };
