@@ -19,7 +19,7 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="flex justify-center items-center p-4">
+    <div className="container mx-auto p-4 md:p-8 flex justify-center items-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Client Portal</CardTitle>

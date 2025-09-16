@@ -47,7 +47,7 @@ const App = () => {
         <BrowserRouter>
           <div className="flex flex-col min-h-screen">
             <Header session={session} />
-            <main className="flex-grow container mx-auto px-4 md:px-6 py-8">
+            <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/services" element={<Services />} />
