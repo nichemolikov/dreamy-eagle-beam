@@ -11,12 +11,12 @@ const Footer = () => {
             <span className="font-semibold">AutoRepair Pro</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} AutoRepair Pro. All rights reserved.
+            © {new Date().getFullYear()} AutoRepair Pro. Всички права запазени.
           </p>
           <nav className="flex gap-4">
-            <Link to="/about" className="text-sm hover:underline">About</Link>
-            <Link to="/contact" className="text-sm hover:underline">Contact</Link>
-            <Link to="/services" className="text-sm hover:underline">Services</Link>
+            <Link to="/about" className="text-sm hover:underline">За нас</Link>
+            <Link to="/contact" className="text-sm hover:underline">Контакти</Link>
+            <Link to="/services" className="text-sm hover:underline">Услуги</Link>
           </nav>
         </div>
       </div>

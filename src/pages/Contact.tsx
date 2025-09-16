@@ -1,8 +1,8 @@
 const Contact = () => (
   <div className="container mx-auto p-4 md:p-8">
-    <h1 className="text-3xl font-bold">Contact Us</h1>
+    <h1 className="text-3xl font-bold">Свържете се с нас</h1>
     <p className="mt-4 text-muted-foreground">
-      A contact form and our location details will go here.
+      Тук ще има форма за контакт и данни за нашето местоположение.
     </p>
   </div>
 );

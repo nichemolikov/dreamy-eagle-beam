@@ -4,23 +4,23 @@ import { Wrench, Car, BatteryCharging, CircleDot } from "lucide-react";
 const services = [
   {
     icon: <Wrench className="h-8 w-8 text-primary" />,
-    title: "Engine & Transmission",
-    description: "Comprehensive engine diagnostics, repairs, and transmission services to keep your car running smoothly.",
+    title: "Двигател и трансмисия",
+    description: "Цялостна диагностика на двигателя, ремонти и обслужване на трансмисията, за да поддържате автомобила си в перфектно състояние.",
   },
   {
     icon: <CircleDot className="h-8 w-8 text-primary" />,
-    title: "Brake Services",
-    description: "Expert brake inspections, repairs, and replacements for your safety and peace of mind on the road.",
+    title: "Спирачни услуги",
+    description: "Експертни прегледи, ремонти и смяна на спирачки за вашата безопасност и спокойствие на пътя.",
   },
   {
     icon: <Car className="h-8 w-8 text-primary" />,
-    title: "Tire & Alignment",
-    description: "Professional tire services, including rotation, balancing, and precise wheel alignments.",
+    title: "Гуми и реглаж",
+    description: "Професионални услуги за гуми, включително ротация, балансиране и прецизен реглаж на колелата.",
   },
   {
     icon: <BatteryCharging className="h-8 w-8 text-primary" />,
-    title: "Electrical Diagnostics",
-    description: "Advanced diagnostics to pinpoint and resolve any electrical issues in your vehicle.",
+    title: "Електрическа диагностика",
+    description: "Разширена диагностика за откриване и разрешаване на всякакви електрически проблеми във вашия автомобил.",
   },
 ];
 
@@ -29,9 +29,9 @@ const ServicesHighlight = () => {
     <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Our Most Popular Services</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Нашите най-популярни услуги</h2>
           <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            We offer a wide range of services to meet all your auto repair needs.
+            Предлагаме широка гама от услуги, за да отговорим на всички ваши нужди за ремонт на автомобили.
           </p>
         </div>
         <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">

@@ -7,17 +7,17 @@ const Hero = () => {
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
-            Expert Auto Repair in Toronto
+            Експертен ремонт на автомобили
           </h1>
           <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-            Your trusted mechanics for European, Asian, and Domestic vehicles. Quality service you can rely on.
+            Вашите доверени механици за европейски, азиатски и местни автомобили. Качествено обслужване, на което можете да разчитате.
           </p>
           <div className="space-x-4 mt-6">
             <Button asChild size="lg">
-              <Link to="/dashboard">Book an Appointment</Link>
+              <Link to="/dashboard">Запазете час</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/contact">Contact Us</Link>
+              <Link to="/contact">Свържете се с нас</Link>
             </Button>
           </div>
         </div>

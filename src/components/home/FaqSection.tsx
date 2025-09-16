@@ -7,20 +7,20 @@ import {
 
 const faqs = [
   {
-    question: "What types of vehicles do you specialize in?",
-    answer: "We service all makes and models, including European, Asian imports, and domestic vehicles. Our mechanics are trained to handle everything from routine maintenance to complex repairs.",
+    question: "За какви видове превозни средства сте специализирани?",
+    answer: "Обслужваме всички марки и модели, включително европейски, азиатски и местни автомобили. Нашите механици са обучени да се справят с всичко - от рутинна поддръжка до сложни ремонти.",
   },
   {
-    question: "What kind of parts do you use for repairs?",
-    answer: "We use OEM (Original Equipment Manufacturer) parts whenever possible to ensure the best quality and compatibility. If OEM parts are not available, we use high-quality aftermarket parts that meet or exceed manufacturer standards.",
+    question: "Какви части използвате за ремонтите?",
+    answer: "Използваме оригинални (OEM) части, когато е възможно, за да осигурим най-доброто качество и съвместимост. Ако OEM части не са налични, използваме висококачествени резервни части, които отговарят или надвишават стандартите на производителя.",
   },
   {
-    question: "Do you offer any warranties on your repairs?",
-    answer: "Yes, we stand behind our work. We offer a comprehensive warranty on both parts and labor for all our repairs. Please ask our service advisor for specific details regarding your service.",
+    question: "Предлагате ли гаранция за ремонтите си?",
+    answer: "Да, ние стоим зад работата си. Предлагаме пълна гаранция както за частите, така и за труда по всички наши ремонти. Моля, попитайте нашия сервизен консултант за конкретни подробности относно вашата услуга.",
   },
   {
-    question: "How long does a typical service take?",
-    answer: "Service duration depends on the job. Minor services like oil changes can be done in about an hour, while more complex repairs may take longer. We always provide an estimated completion time and keep you updated.",
+    question: "Колко време отнема стандартното обслужване?",
+    answer: "Продължителността на обслужването зависи от работата. Малки услуги като смяна на масло могат да бъдат извършени за около час, докато по-сложни ремонти може да отнемат повече време. Винаги предоставяме приблизително време за завършване и ви държим в течение.",
   },
 ];
 
@@ -29,7 +29,7 @@ const FaqSection = () => {
     <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Често задавани въпроси</h2>
         </div>
         <div className="mx-auto max-w-3xl py-12">
           <Accordion type="single" collapsible className="w-full">

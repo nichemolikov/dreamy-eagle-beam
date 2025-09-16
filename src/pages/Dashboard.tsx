@@ -1,8 +1,8 @@
 const Dashboard = () => (
   <div className="container mx-auto p-4 md:p-8">
-    <h1 className="text-3xl font-bold">Client Dashboard</h1>
+    <h1 className="text-3xl font-bold">Клиентско табло</h1>
     <p className="mt-4 text-muted-foreground">
-      Welcome to your personal dashboard. Here you will be able to see your vehicle repair history, schedule appointments, and view diagnostics.
+      Добре дошли във вашето лично табло. Тук ще можете да виждате историята на ремонтите на вашия автомобил, да насрочвате срещи и да преглеждате диагностика.
     </p>
   </div>
 );

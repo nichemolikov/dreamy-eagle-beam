@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/services", label: "Services" },
-  { to: "/about", label: "About Us" },
-  { to: "/contact", label: "Contact" },
-  { to: "/faq", label: "FAQ" },
+  { to: "/", label: "Начало" },
+  { to: "/services", label: "Услуги" },
+  { to: "/about", label: "За нас" },
+  { to: "/contact", label: "Контакти" },
+  { to: "/faq", label: "ЧЗВ" },
 ];
 
 const NavLinks = ({ className }: { className?: string }) => (
@@ -48,18 +48,18 @@ const Header = ({ session }: { session: Session | null }) => {
         <div className="ml-auto flex-1 sm:flex-initial">
           {session ? (
             <div className="flex items-center gap-2">
-              <Button onClick={() => navigate("/dashboard")} variant="outline">Dashboard</Button>
-              <Button onClick={handleLogout}>Logout</Button>
+              <Button onClick={() => navigate("/dashboard")} variant="outline">Табло</Button>
+              <Button onClick={handleLogout}>Изход</Button>
             </div>
           ) : (
-            <Button onClick={() => navigate("/login")}>Client Login</Button>
+            <Button onClick={() => navigate("/login")}>Вход за клиенти</Button>
           )}
         </div>
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="shrink-0 md:hidden">
               <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
+              <span className="sr-only">Превключване на навигационното меню</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="right">
