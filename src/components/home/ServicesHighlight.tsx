@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench, Car, BatteryCharging, CircleDot } from "lucide-react";
 
@@ -36,13 +37,13 @@ const ServicesHighlight = () => {
         </div>
         <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
           {services.map((service) => (
-            <Card key={service.title}>
+            <Card key={service.title} className="group cursor-pointer transition-all duration-300 ease-in-out hover:scale-105 hover:bg-primary">
               <CardHeader className="flex flex-col items-center text-center">
-                {service.icon}
-                <CardTitle className="mt-4">{service.title}</CardTitle>
+                {React.cloneElement(service.icon, { className: `${service.icon.props.className} transition-colors group-hover:text-primary-foreground` })}
+                <CardTitle className="mt-4 transition-colors group-hover:text-primary-foreground">{service.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-sm text-muted-foreground">{service.description}</p>
+                <p className="text-sm text-muted-foreground transition-colors group-hover:text-primary-foreground/90">{service.description}</p>
               </CardContent>
             </Card>
           ))}
