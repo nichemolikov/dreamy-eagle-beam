@@ -5,7 +5,7 @@ const Hero = () => {
   return (
     <section
       className="relative w-full h-[70vh] max-h-[800px] flex items-center justify-center text-center bg-cover bg-center"
-      style={{ backgroundImage: "url(/)" }}
+      style={{ backgroundImage: "url(https://mertai.bg/wp-content/uploads/2025/09/viber_image_2025-07-29_13-43-45-541.jpg)" }}
     >
       <div className="absolute inset-0 bg-black/60" />
       <div className="relative z-10 container px-4 md:px-6 text-white">
