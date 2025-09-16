@@ -20,7 +20,7 @@ const NavLinks = ({ className }: { className?: string }) => (
         key={link.to}
         to={link.to}
         className={({ isActive }) =>
-          `transition-colors hover:text-primary ${isActive ? "text-primary font-semibold" : "text-muted-foreground"}`
+          `transition-colors hover:text-white ${isActive ? "text-white font-semibold" : "text-[#f1f1f1]"}`
         }
       >
         {link.label}
@@ -38,10 +38,10 @@ const Header = ({ session }: { session: Session | null }) => {
   };
 
   return (
-    <header className="sticky top-0 flex h-24 items-center justify-between border-b bg-background px-4 md:px-6 z-50">
+    <header className="sticky top-0 flex h-24 items-center justify-between border-b border-gray-700 bg-[#211f1f] px-4 md:px-6 z-50">
       <Link to="/" className="flex items-center gap-2 font-semibold">
         <img src="/logo.png" alt="MERT AI Logo" className="h-20" />
-        <span className="text-xl font-bold">MERT AI</span>
+        <span className="text-xl font-bold text-[#f1f1f1]">MERT AI</span>
       </Link>
 
       <div className="hidden md:flex justify-center">
@@ -52,17 +52,17 @@ const Header = ({ session }: { session: Session | null }) => {
         <div className="hidden md:flex items-center gap-2">
           {session ? (
             <>
-              <Button onClick={() => navigate("/dashboard")} variant="outline">Табло</Button>
-              <Button onClick={handleLogout}>Изход</Button>
+              <Button onClick={() => navigate("/dashboard")} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Табло</Button>
+              <Button onClick={handleLogout} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Изход</Button>
             </>
           ) : (
-            <Button onClick={() => navigate("/login")}>Вход за клиенти</Button>
+            <Button onClick={() => navigate("/login")} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Вход за клиенти</Button>
           )}
         </div>
         
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+            <Button variant="outline" size="icon" className="shrink-0 md:hidden text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Превключване на навигационното меню</span>
             </Button>
