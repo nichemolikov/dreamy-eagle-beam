@@ -5,7 +5,7 @@ const About = () => {
     <div>
       <section
         className="relative w-full h-[30vh] bg-cover bg-center"
-        style={{ backgroundImage: "url(https://via.placeholder.com/1920x400?text=About+Us+Banner)" }} {/* Променен URL адрес */}
+       
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white p-4">
