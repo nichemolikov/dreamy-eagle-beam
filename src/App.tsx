@@ -17,7 +17,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Faq from "./pages/Faq";
 import Login from "./pages/Login";
-import ClientDashboard from "./pages/ClientDashboard"; // Renamed from Dashboard
+import ClientDashboard from "./pages/ClientDashboard";
 import NotFound from "./pages/NotFound";
 
 // Admin Dashboard Imports
@@ -62,17 +62,18 @@ const App = () => {
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
                 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute session={session} />}>
-                  <Route path="/dashboard" element={<ClientDashboard />} /> {/* Client Dashboard */}
-                  
-                  {/* Admin Dashboard Routes */}
+                {/* Protected Routes for Clients and Admins */}
+                <Route element={<ProtectedRoute session={session} allowedRoles={["client", "admin"]} />}>
+                  <Route path="/dashboard" element={<ClientDashboard />} />
+                </Route>
+
+                {/* Protected Routes for Admins only */}
+                <Route element={<ProtectedRoute session={session} allowedRoles={["admin"]} redirectTo="/" />}>
                   <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<DashboardOverview />} /> {/* Default admin route */}
+                    <Route index element={<DashboardOverview />} />
                     <Route path="overview" element={<DashboardOverview />} />
                     <Route path="clients" element={<Clients />} />
                     <Route path="repairs" element={<Repairs />} />
-                    {/* Add other admin sub-pages here */}
                   </Route>
                 </Route>
 

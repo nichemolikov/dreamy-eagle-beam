@@ -3,16 +3,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { Session } from "@supabase/supabase-js"; // Import Session type
+import { Session } from "@supabase/supabase-js";
+import { useUserRole } from "@/hooks/use-user-role"; // Import the new hook
 
 interface HeaderProps {
-  session: Session | null; // Add session prop
+  session: Session | null;
 }
 
 const Header = ({ session }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const isAuthenticated = !!session; // Determine authentication status from session
+  const { role, isLoading: isLoadingRole } = useUserRole(); // Use the new hook
+
+  const isAuthenticated = !!session;
+  const isAdmin = role === "admin";
 
   const navItems = [
     { name: "Начало", path: "/" },
@@ -35,7 +39,7 @@ const Header = ({ session }: HeaderProps) => {
               {item.name}
             </Link>
           ))}
-          {isAuthenticated && (
+          {!isLoadingRole && isAdmin && ( // Only show if role is loaded and is admin
             <Link to="/admin/overview" className="text-sm font-medium text-blue-400 hover:underline">
               Админ панел
             </Link>
@@ -64,7 +68,7 @@ const Header = ({ session }: HeaderProps) => {
                   {item.name}
                 </Link>
               ))}
-              {isAuthenticated && (
+              {!isLoadingRole && isAdmin && ( // Only show if role is loaded and is admin
                 <Link to="/admin/overview" className="text-lg font-medium text-blue-400 hover:underline" onClick={() => setIsOpen(false)}>
                   Админ панел
                 </Link>
