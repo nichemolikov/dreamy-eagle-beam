@@ -3,11 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { Session } from "@supabase/supabase-js"; // Import Session type
 
-const Header = () => {
+interface HeaderProps {
+  session: Session | null; // Add session prop
+}
+
+const Header = ({ session }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const isAuthenticated = false; // This should come from your auth context
+  const isAuthenticated = !!session; // Determine authentication status from session
 
   const navItems = [
     { name: "Начало", path: "/" },
@@ -30,6 +35,11 @@ const Header = () => {
               {item.name}
             </Link>
           ))}
+          {isAuthenticated && (
+            <Link to="/admin/overview" className="text-sm font-medium text-blue-400 hover:underline">
+              Админ панел
+            </Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
@@ -54,6 +64,11 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <Link to="/admin/overview" className="text-lg font-medium text-blue-400 hover:underline" onClick={() => setIsOpen(false)}>
+                  Админ панел
+                </Link>
+              )}
               {isAuthenticated ? (
                 <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={() => setIsOpen(false)}>Профил</Button>
               ) : (

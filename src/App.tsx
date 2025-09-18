@@ -17,8 +17,14 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Faq from "./pages/Faq";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import ClientDashboard from "./pages/ClientDashboard"; // Renamed from Dashboard
 import NotFound from "./pages/NotFound";
+
+// Admin Dashboard Imports
+import AdminLayout from "./pages/admin/AdminLayout";
+import DashboardOverview from "./pages/admin/DashboardOverview";
+import Clients from "./pages/admin/Clients";
+import Repairs from "./pages/admin/Repairs";
 
 const queryClient = new QueryClient();
 
@@ -56,9 +62,18 @@ const App = () => {
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
                 
+                {/* Protected Routes */}
                 <Route element={<ProtectedRoute session={session} />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  {/* Add other protected routes here, e.g., repair history */}
+                  <Route path="/dashboard" element={<ClientDashboard />} /> {/* Client Dashboard */}
+                  
+                  {/* Admin Dashboard Routes */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<DashboardOverview />} /> {/* Default admin route */}
+                    <Route path="overview" element={<DashboardOverview />} />
+                    <Route path="clients" element={<Clients />} />
+                    <Route path="repairs" element={<Repairs />} />
+                    {/* Add other admin sub-pages here */}
+                  </Route>
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
