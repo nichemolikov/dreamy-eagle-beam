@@ -2,7 +2,7 @@ import Hero from "@/components/home/Hero";
 import ServicesHighlight from "@/components/home/ServicesHighlight";
 import AboutUsSection from "@/components/home/AboutUsSection";
 import FaqSection from "@/components/home/FaqSection";
-import ContactSection from "@/components/home/ContactSection"; // Нов импорт
+import ContactSection from "@/components/home/ContactSection";
 
 const Home = () => {
   return (
@@ -10,8 +10,8 @@ const Home = () => {
       <Hero />
       <ServicesHighlight />
       <AboutUsSection />
-      <FaqSection />
-      <ContactSection /> {/* Добавяне на новата секция за контакт */}
+      <ContactSection /> {/* ContactSection остава преди FaqSection */}
+      <FaqSection /> {/* FaqSection е преместена най-долу, преди футъра */}
     </div>
   );
 };
