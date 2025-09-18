@@ -1,6 +1,6 @@
 import Hero from "@/components/home/Hero";
 import ServicesHighlight from "@/components/home/ServicesHighlight";
-import WhyChooseUs from "@/components/home/WhyChooseUs";
+import AboutUsSection from "@/components/home/AboutUsSection"; // Актуализиран импорт
 import FaqSection from "@/components/home/FaqSection";
 
 const Home = () => {
@@ -8,7 +8,7 @@ const Home = () => {
     <div className="flex flex-col">
       <Hero />
       <ServicesHighlight />
-      <WhyChooseUs />
+      <AboutUsSection /> {/* Актуализирано използване */}
       <FaqSection />
     </div>
   );
