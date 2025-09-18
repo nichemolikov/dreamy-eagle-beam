@@ -22,7 +22,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription, // Added FormDescription import
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,13 +69,29 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
 
       let emailConfirmed = false;
       if (client?.user_id) {
-        // Fetch auth user details separately for email_confirmed_at
-        const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(client.user_id);
-        if (authUserError) {
-          console.error("Error fetching auth user details:", authUserError);
-          // Continue without emailConfirmed status if there's an error
-        } else if (authUser?.user) {
-          emailConfirmed = !!authUser.user.email_confirmed_at;
+        // Fetch auth user details via Edge Function
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) {
+          throw new Error("No session token found for admin user.");
+        }
+
+        const edgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/get-user-auth-status`;
+        const response = await fetch(edgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userId: client.user_id }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          console.error("Error from get-user-auth-status Edge Function:", result.error);
+          // Continue without emailConfirmed status if there's an error, but log it
+        } else {
+          emailConfirmed = result.emailConfirmed;
         }
       }
 
@@ -146,9 +162,9 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
           throw new Error("No session token found for admin user.");
         }
 
-        const edgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/admin-update-user`; // Replace with your project ID
+        const adminUpdateUserEdgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/admin-update-user`;
 
-        const response = await fetch(edgeFunctionUrl, {
+        const response = await fetch(adminUpdateUserEdgeFunctionUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
