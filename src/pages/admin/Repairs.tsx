@@ -7,6 +7,7 @@ import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AddRepairForm from "@/components/admin/AddRepairForm";
+import EditRepairStatusForm from "@/components/admin/EditRepairStatusForm"; // Import the new component
 import { showError, showSuccess } from "@/utils/toast";
 import { formatCurrency } from "@/lib/utils";
 
@@ -27,6 +28,8 @@ const Repairs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isAddRepairDialogOpen, setIsAddRepairDialogOpen] = useState(false);
+  const [isEditRepairStatusDialogOpen, setIsEditRepairStatusDialogOpen] = useState(false); // State for edit dialog
+  const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null); // State to hold the repair being edited
   const queryClient = useQueryClient();
 
   const { data: repairs, isLoading, error } = useQuery<Repair[]>({
@@ -56,6 +59,16 @@ const Repairs = () => {
 
   const handleAddRepairSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["repairs"] });
+  };
+
+  const handleEditRepairStatus = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setIsEditRepairStatusDialogOpen(true);
+  };
+
+  const handleEditRepairStatusSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["repairs"] });
+    setSelectedRepair(null); // Clear selected repair after success
   };
 
   const handleDeleteRepair = async (repairId: string) => {
@@ -139,7 +152,7 @@ const Repairs = () => {
                 <TableCell>{repair.cost ? formatCurrency(repair.cost) : "-"}</TableCell>
                 <TableCell>{new Date(repair.created_at).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" className="mr-2">
+                  <Button variant="ghost" size="sm" className="mr-2" onClick={() => handleEditRepairStatus(repair)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDeleteRepair(repair.id)}>
@@ -163,6 +176,15 @@ const Repairs = () => {
         onOpenChange={setIsAddRepairDialogOpen}
         onSuccess={handleAddRepairSuccess}
       />
+
+      {selectedRepair && (
+        <EditRepairStatusForm
+          isOpen={isEditRepairStatusDialogOpen}
+          onOpenChange={setIsEditRepairStatusDialogOpen}
+          repair={selectedRepair}
+          onSuccess={handleEditRepairStatusSuccess}
+        />
+      )}
     </div>
   );
 };
