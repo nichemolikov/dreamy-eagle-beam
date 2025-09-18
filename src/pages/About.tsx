@@ -19,7 +19,7 @@ const About = () => {
       </section>
       <div className="container mx-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto text-muted-foreground space-y-8 text-lg">
-          <h2 className="text-3xl font-bold text-center text-primary-foreground sm:text-4xl">
+          <h2 className="text-3xl font-bold text-center text-black sm:text-4xl">
             🚨 Вашият надежден партньор за 24/7 пътна помощ и автосервиз (до 4,5 тона)
           </h2>
           <p className="text-center text-xl leading-relaxed">
