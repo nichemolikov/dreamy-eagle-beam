@@ -39,3 +39,5 @@ const ProtectedRoute = ({ session, allowedRoles, redirectTo = "/login" }: Protec
   // If no allowedRoles are specified, or if the user has an allowed role, grant access.
   return <Outlet />;
 };
+
+export default ProtectedRoute;
