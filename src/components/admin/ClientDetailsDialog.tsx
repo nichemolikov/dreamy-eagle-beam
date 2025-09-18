@@ -22,14 +22,9 @@ interface Client {
   name: string;
   phone: string | null;
   email: string | null;
-  vehicle_info: {
-    make: string | null;
-    model: string | null;
-    plate_number: string | null;
-    vin: string | null;
-  } | null;
   notes: string | null;
   created_at: string;
+  user_id: string | null; // Added user_id for consistency
 }
 
 interface Repair {
@@ -37,6 +32,17 @@ interface Repair {
   description: string;
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
   cost: number | null;
+  created_at: string;
+}
+
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number | null;
+  plate_number: string | null;
+  vin: string | null;
+  color: string | null;
   created_at: string;
 }
 
@@ -67,8 +73,23 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
     enabled: !!clientId, // Only run query if clientId is available
   });
 
-  const isLoading = isLoadingClient || isLoadingRepairs;
-  const error = clientError || repairsError;
+  const { data: vehicles, isLoading: isLoadingVehicles, error: vehiclesError } = useQuery<Vehicle[]>({
+    queryKey: ["clientVehicles", clientId],
+    queryFn: async () => {
+      if (!clientId) return [];
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, make, model, year, plate_number, vin, color, created_at")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!clientId, // Only run query if clientId is available
+  });
+
+  const isLoading = isLoadingClient || isLoadingRepairs || isLoadingVehicles;
+  const error = clientError || repairsError || vehiclesError;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -98,19 +119,40 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
                 <p><strong>Имейл:</strong> {client.email || "-"}</p>
                 <p><strong>Създаден на:</strong> {new Date(client.created_at).toLocaleDateString()}</p>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Информация за автомобил</h3>
-                <p><strong>Марка:</strong> {client.vehicle_info?.make || "-"}</p>
-                <p><strong>Модел:</strong> {client.vehicle_info?.model || "-"}</p>
-                <p><strong>Рег. номер:</strong> {client.vehicle_info?.plate_number || "-"}</p>
-                <p><strong>VIN:</strong> {client.vehicle_info?.vin || "-"}</p>
-              </div>
+              {client.notes && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Бележки</h3>
+                  <p className="text-muted-foreground">{client.notes}</p>
+                </div>
+              )}
             </div>
-            {client.notes && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Бележки</h3>
-                <p className="text-muted-foreground">{client.notes}</p>
-              </div>
+
+            <h3 className="text-lg font-semibold mb-2">Превозни средства</h3>
+            {vehicles && vehicles.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Марка</TableHead>
+                    <TableHead>Модел</TableHead>
+                    <TableHead>Година</TableHead>
+                    <TableHead>Рег. номер</TableHead>
+                    <TableHead>VIN</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vehicles.map((vehicle) => (
+                    <TableRow key={vehicle.id}>
+                      <TableCell>{vehicle.make}</TableCell>
+                      <TableCell>{vehicle.model}</TableCell>
+                      <TableCell>{vehicle.year || "-"}</TableCell>
+                      <TableCell>{vehicle.plate_number || "-"}</TableCell>
+                      <TableCell>{vehicle.vin || "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-muted-foreground">Няма регистрирани превозни средства за този клиент.</p>
             )}
 
             <h3 className="text-lg font-semibold mb-2">История на ремонтите</h3>

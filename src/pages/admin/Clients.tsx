@@ -6,7 +6,7 @@ import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AddClientForm from "@/components/admin/AddClientForm";
-import ClientDetailsDialog from "@/components/admin/ClientDetailsDialog"; // Import the new component
+import ClientDetailsDialog from "@/components/admin/ClientDetailsDialog";
 import { showError, showSuccess } from "@/utils/toast";
 
 interface Client {
@@ -14,39 +14,48 @@ interface Client {
   name: string;
   phone: string | null;
   email: string | null;
-  vehicle_info: {
-    make: string | null;
-    model: string | null;
-    plate_number: string | null;
-    vin: string | null;
-  } | null;
   notes: string | null;
+  user_id: string | null; // Add user_id to client interface
+}
+
+// Extend Client interface to include profile role for filtering
+interface ClientWithProfile extends Client {
+  profiles: {
+    role: string;
+  } | null;
 }
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
-  const [isClientDetailsDialogOpen, setIsClientDetailsDialogOpen] = useState(false); // State for details dialog
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null); // State to hold the selected client ID
+  const [isClientDetailsDialogOpen, setIsClientDetailsDialogOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: clients, isLoading, error } = useQuery<Client[]>({
+  const { data: clients, isLoading, error } = useQuery<ClientWithProfile[]>({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*");
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*, profiles(role)"); // Select client data and join with profiles to get role
       if (error) throw error;
       return data;
     },
   });
 
   const filteredClients = clients?.filter((client) => {
+    // Filter out clients who are also admins
+    // Explicitly check if profiles exists before accessing role
+    if (client.profiles && client.profiles.role === 'admin') {
+      return false;
+    }
+
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return (
       client.name.toLowerCase().includes(lowerCaseSearchTerm) ||
       (client.phone && client.phone.includes(lowerCaseSearchTerm)) ||
       (client.email && client.email.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (client.vehicle_info?.plate_number && client.vehicle_info.plate_number.toLowerCase().includes(lowerCaseSearchTerm)) ||
-      (client.vehicle_info?.vin && client.vehicle_info.vin.toLowerCase().includes(lowerCaseSearchTerm))
+      (client.notes && client.notes.toLowerCase().includes(lowerCaseSearchTerm))
     );
   }) || [];
 
@@ -95,7 +104,7 @@ const Clients = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Търсене по име, телефон, имейл, рег. номер или VIN..."
+            placeholder="Търсене по име, телефон, имейл или бележки..."
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -109,9 +118,6 @@ const Clients = () => {
             <TableHead>Име</TableHead>
             <TableHead>Телефон</TableHead>
             <TableHead>Имейл</TableHead>
-            <TableHead>Автомобил</TableHead>
-            <TableHead>Рег. номер</TableHead>
-            <TableHead>VIN</TableHead>
             <TableHead>Бележки</TableHead>
             <TableHead className="text-right">Действия</TableHead>
           </TableRow>
@@ -123,9 +129,6 @@ const Clients = () => {
                 <TableCell className="font-medium">{client.name}</TableCell>
                 <TableCell>{client.phone || "-"}</TableCell>
                 <TableCell>{client.email || "-"}</TableCell>
-                <TableCell>{client.vehicle_info ? `${client.vehicle_info.make || ""} ${client.vehicle_info.model || ""}`.trim() || "-" : "-"}</TableCell>
-                <TableCell>{client.vehicle_info?.plate_number || "-"}</TableCell>
-                <TableCell>{client.vehicle_info?.vin || "-"}</TableCell>
                 <TableCell>{client.notes || "-"}</TableCell>
                 <TableCell className="text-right">
                   {/* Edit button can be re-purposed for direct client editing if needed */}
@@ -140,7 +143,7 @@ const Clients = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={5} className="h-24 text-center">
                 Няма намерени клиенти.
               </TableCell>
             </TableRow>
