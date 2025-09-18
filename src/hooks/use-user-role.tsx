@@ -12,9 +12,18 @@ export function useUserRole() {
     const fetchUserRole = async () => {
       setIsLoading(true);
       setError(null);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Error getting user in useUserRole:", userError);
+        setError(userError.message);
+        setRole(null);
+        setIsLoading(false);
+        return;
+      }
 
       if (user) {
+        console.log("User found in useUserRole:", user.id);
         const { data, error } = await supabase
           .from("profiles")
           .select("role")
@@ -22,15 +31,18 @@ export function useUserRole() {
           .single();
 
         if (error) {
-          console.error("Error fetching user role:", error);
+          console.error("Error fetching user role from profiles:", error);
           setError(error.message);
           setRole(null);
         } else if (data) {
+          console.log("Fetched role:", data.role);
           setRole(data.role as UserRole);
         } else {
+          console.log("No profile data found for user, setting role to null.");
           setRole(null); // User exists but no profile/role found
         }
       } else {
+        console.log("No user logged in, setting role to null.");
         setRole(null); // No user logged in
       }
       setIsLoading(false);
@@ -39,6 +51,7 @@ export function useUserRole() {
     fetchUserRole();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session);
       if (session) {
         fetchUserRole(); // Re-fetch role on auth state change (e.g., login/logout)
       } else {
