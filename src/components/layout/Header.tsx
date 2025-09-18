@@ -1,74 +1,65 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
 
-const navLinks = [
-  { to: "/", label: "Начало" },
-  { to: "/services", label: "Услуги" },
-  { to: "/about", label: "За нас" },
-  { to: "/contact", label: "Контакти" },
-  { to: "/faq", label: "ЧЗВ" },
-];
-
-const NavLinks = ({ className }: { className?: string }) => (
-  <nav className={className}>
-    {navLinks.map((link) => (
-      <NavLink
-        key={link.to}
-        to={link.to}
-        className={({ isActive }) =>
-          `transition-colors hover:text-white ${isActive ? "text-white font-semibold" : "text-[#f1f1f1]"}`
-        }
-      >
-        {link.label}
-      </NavLink>
-    ))}
-  </nav>
-);
-
-const Header = ({ session }: { session: Session | null }) => {
+const Header = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const isAuthenticated = false; // This should come from your auth context
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
+  const navItems = [
+    { name: "Начало", path: "/" },
+    { name: "За нас", path: "/about" },
+    { name: "Услуги", path: "/services" },
+    { name: "Контакти", path: "/contact" },
+  ];
 
   return (
-    <header className="sticky top-0 flex h-24 items-center justify-between border-b border-gray-700 bg-[#211f1f] px-4 md:px-6 z-50">
-      <Link to="/" className="flex items-center gap-2 font-semibold">
-        <img src="/logo.png" alt="MERT AI Logo" className="h-20 [transform:rotateY(180deg)]" />
-        <span className="text-xl font-bold text-[#f1f1f1]">MERT AI</span>
-      </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-gray-700 bg-[#211f1f] py-4">
+      <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="MERT AI Logo" className="h-16" />
+          <span className="text-2xl font-semibold text-[#f1f1f1]">MERT AI</span>
+        </Link>
 
-      <div className="hidden md:flex justify-center">
-        <NavLinks className="flex items-center gap-5 text-sm lg:gap-6" />
-      </div>
+        <nav className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
+            <Link key={item.name} to={item.path} className="text-sm font-medium text-[#f1f1f1] hover:underline">
+              {item.name}
+            </Link>
+          ))}
+        </nav>
 
-      <div className="flex items-center gap-4">
-        <div className="hidden md:flex items-center gap-2">
-          {session ? (
-            <>
-              <Button onClick={() => navigate("/dashboard")} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Табло</Button>
-              <Button onClick={handleLogout} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Изход</Button>
-            </>
+        <div className="hidden md:flex items-center gap-4">
+          {isAuthenticated ? (
+            <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Профил</Button>
           ) : (
-            <Button onClick={() => navigate("/login")} variant="outline" className="text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Вход за клиенти</Button>
+            <Button onClick={() => navigate("/login")} variant="default">Вход за клиенти</Button>
           )}
         </div>
-        
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 md:hidden text-[#f1f1f1] border-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Превключване на навигационното меню</span>
+
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon">
+              <Menu className="h-6 w-6 text-[#f1f1f1]" />
+              <span className="sr-only">Toggle navigation</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right">
-            <NavLinks className="grid gap-6 text-lg font-medium" />
+          <SheetContent side="right" className="bg-[#211f1f] text-[#f1f1f1]">
+            <div className="flex flex-col gap-6 p-6">
+              {navItems.map((item) => (
+                <Link key={item.name} to={item.path} className="text-lg font-medium hover:underline" onClick={() => setIsOpen(false)}>
+                  {item.name}
+                </Link>
+              ))}
+              {isAuthenticated ? (
+                <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={() => setIsOpen(false)}>Профил</Button>
+              ) : (
+                <Button onClick={() => { navigate("/login"); setIsOpen(false); }} variant="default">Вход за клиенти</Button>
+              )}
+            </div>
           </SheetContent>
         </Sheet>
       </div>
