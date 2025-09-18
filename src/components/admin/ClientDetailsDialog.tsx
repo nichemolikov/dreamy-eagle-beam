@@ -57,7 +57,8 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
     queryKey: ["client", clientId],
     queryFn: async () => {
       if (!clientId) return null;
-      const { data, error } = await supabase.from("clients").select("*").eq("id", clientId).single();
+      // Explicitly select columns to avoid implicit joins to auth.users
+      const { data, error } = await supabase.from("clients").select("id, user_id, name, phone, email, notes, created_at, updated_at").eq("id", clientId).single();
       if (error) throw error;
       return data;
     },

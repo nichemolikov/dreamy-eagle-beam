@@ -13,10 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const adminSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    console.log("get-user-auth-status: Service role key loaded:", !!serviceRoleKey); // Log if key is loaded
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify the calling user is an authenticated admin
     const authHeader = req.headers.get('Authorization');
@@ -31,7 +32,7 @@ serve(async (req) => {
     const { data: { user: callingUser }, error: userError } = await adminSupabase.auth.getUser(token);
 
     if (userError || !callingUser) {
-      console.error("Error getting calling user:", userError?.message);
+      console.error("get-user-auth-status: Error getting calling user:", userError?.message);
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token or user not found' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -46,7 +47,7 @@ serve(async (req) => {
       .single();
 
     if (profileError || profile?.role !== 'admin') {
-      console.error("Calling user is not an admin or profile not found:", profileError?.message);
+      console.error("get-user-auth-status: Calling user is not an admin or profile not found:", profileError?.message);
       return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can perform this action' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -54,30 +55,25 @@ serve(async (req) => {
     }
 
     const { userId } = await req.json();
-
-    if (!userId) {
-      return new Response(JSON.stringify({ error: 'User ID is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    console.log("get-user-auth-status: Received status request for userId:", userId);
 
     const { data: authUser, error: fetchUserError } = await adminSupabase.auth.admin.getUserById(userId);
 
     if (fetchUserError) {
-      console.error("Error fetching user by ID:", fetchUserError.message);
+      console.error("get-user-auth-status: Error fetching user by ID with service role key:", fetchUserError.message);
       return new Response(JSON.stringify({ error: fetchUserError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    console.log("get-user-auth-status: Fetched authUser email_confirmed_at:", authUser?.user?.email_confirmed_at);
 
     return new Response(JSON.stringify({ emailConfirmed: !!authUser?.user?.email_confirmed_at }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error("Edge Function error:", error.message);
+    console.error("get-user-auth-status: Edge Function error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

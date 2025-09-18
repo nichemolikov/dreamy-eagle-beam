@@ -13,10 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const adminSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    console.log("admin-update-user: Service role key loaded:", !!serviceRoleKey); // Log if key is loaded
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify the calling user is an authenticated admin
     const authHeader = req.headers.get('Authorization');
@@ -31,7 +32,7 @@ serve(async (req) => {
     const { data: { user: callingUser }, error: userError } = await adminSupabase.auth.getUser(token);
 
     if (userError || !callingUser) {
-      console.error("Error getting calling user:", userError?.message);
+      console.error("admin-update-user: Error getting calling user:", userError?.message);
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token or user not found' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -46,7 +47,7 @@ serve(async (req) => {
       .single();
 
     if (profileError || profile?.role !== 'admin') {
-      console.error("Calling user is not an admin or profile not found:", profileError?.message);
+      console.error("admin-update-user: Calling user is not an admin or profile not found:", profileError?.message);
       return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can perform this action' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -54,6 +55,7 @@ serve(async (req) => {
     }
 
     const { userId, newPassword, emailConfirmed } = await req.json();
+    console.log("admin-update-user: Received update request for userId:", userId, "emailConfirmed:", emailConfirmed);
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), {
@@ -71,6 +73,7 @@ serve(async (req) => {
     // Set email_confirmed_at based on the boolean flag
     if (emailConfirmed !== undefined) {
       updateData.email_confirmed_at = emailConfirmed ? new Date().toISOString() : null;
+      console.log("admin-update-user: Setting email_confirmed_at to:", updateData.email_confirmed_at);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -86,19 +89,20 @@ serve(async (req) => {
     );
 
     if (updateError) {
-      console.error("Error updating user:", updateError.message);
+      console.error("admin-update-user: Error updating user in Supabase Auth:", updateError.message);
       return new Response(JSON.stringify({ error: updateError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    console.log("admin-update-user: Successfully updated user in Supabase Auth:", updatedUser);
 
     return new Response(JSON.stringify({ message: 'User updated successfully', user: updatedUser }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error("Edge Function error:", error.message);
+    console.error("admin-update-user: Edge Function error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
