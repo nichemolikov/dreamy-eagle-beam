@@ -36,7 +36,7 @@ const Header = () => {
           {isAuthenticated ? (
             <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Профил</Button>
           ) : (
-            <Button onClick={() => navigate("/login")} variant="aquablue">Вход за клиенти</Button>
+            <Button onClick={() => navigate("/login")} variant="default">Вход за клиенти</Button>
           )}
         </div>
 
