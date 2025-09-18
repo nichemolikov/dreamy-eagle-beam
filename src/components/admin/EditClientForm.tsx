@@ -1,4 +1,3 @@
-profile -> auth.users relationship.">
 "use client";
 
 import { useForm } from "react-hook-form";
