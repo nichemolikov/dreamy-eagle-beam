@@ -1,15 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Edit, PlusCircle, Trash2 } from "lucide-react";
+import { Loader2, Edit, PlusCircle, Trash2, Car } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import EditClientProfileForm from "@/components/client/EditClientProfileForm";
 import AddVehicleForm from "@/components/client/AddVehicleForm";
 import EditVehicleForm from "@/components/client/EditVehicleForm";
+import VehicleRepairsDialog from "@/components/client/VehicleRepairsDialog"; // New import
 import { showError, showSuccess } from "@/utils/toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -30,6 +31,7 @@ interface Repair {
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
   cost: number | null;
   created_at: string;
+  vehicle_id: string | null; // Added vehicle_id
 }
 
 interface Vehicle {
@@ -53,6 +55,11 @@ const ClientDashboard = () => {
   const [isAddVehicleDialogOpen, setIsAddVehicleDialogOpen] = useState(false);
   const [isEditVehicleDialogOpen, setIsEditVehicleDialogOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+
+  // New state for vehicle repairs dialog
+  const [isVehicleRepairsDialogOpen, setIsVehicleRepairsDialogOpen] = useState(false);
+  const [selectedVehicleForRepairs, setSelectedVehicleForRepairs] = useState<{ id: string; make: string; model: string } | null>(null);
+
 
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ["user"],
@@ -84,7 +91,7 @@ const ClientDashboard = () => {
       if (!client?.id) return [];
       const { data, error } = await supabase
         .from("repairs")
-        .select("id, description, status, cost, created_at")
+        .select("id, description, status, cost, created_at, vehicle_id") // Select vehicle_id
         .eq("client_id", client.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -126,6 +133,11 @@ const ClientDashboard = () => {
       console.error("Error deleting vehicle:", error);
       showError(`Грешка при изтриване на превозно средство: ${error.message}`);
     }
+  };
+
+  const handleViewVehicleRepairs = (vehicle: Vehicle) => {
+    setSelectedVehicleForRepairs({ id: vehicle.id, make: vehicle.make, model: vehicle.model });
+    setIsVehicleRepairsDialogOpen(true);
   };
 
   if (isLoading) {
@@ -207,18 +219,19 @@ const ClientDashboard = () => {
               </TableHeader>
               <TableBody>
                 {vehicles.map((vehicle) => (
-                  <TableRow key={vehicle.id}>
-                    <TableCell>{vehicle.make}</TableCell>
-                    <TableCell>{vehicle.model}</TableCell>
-                    <TableCell>{vehicle.year || "-"}</TableCell>
-                    <TableCell>{vehicle.plate_number || "-"}</TableCell>
-                    <TableCell>{vehicle.vin || "-"}</TableCell>
+                  <TableRow key={vehicle.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleViewVehicleRepairs(vehicle); }}>{vehicle.make}</TableCell>
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleViewVehicleRepairs(vehicle); }}>{vehicle.model}</TableCell>
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleViewVehicleRepairs(vehicle); }}>{vehicle.year || "-"}</TableCell>
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleViewVehicleRepairs(vehicle); }}>{vehicle.plate_number || "-"}</TableCell>
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleViewVehicleRepairs(vehicle); }}>{vehicle.vin || "-"}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="mr-2"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click from triggering
                           setSelectedVehicle(vehicle);
                           setIsEditVehicleDialogOpen(true);
                         }}
@@ -227,7 +240,7 @@ const ClientDashboard = () => {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}> {/* Prevent row click */}
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
@@ -255,10 +268,10 @@ const ClientDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Repairs History Card */}
+      {/* Repairs History Card (for all client's repairs) */}
       <Card>
         <CardHeader>
-            <CardTitle>История на ремонтите</CardTitle>
+            <CardTitle>История на всички ремонти</CardTitle>
         </CardHeader>
         <CardContent>
           {repairs && repairs.length > 0 ? (
@@ -266,20 +279,27 @@ const ClientDashboard = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Описание</TableHead>
+                  <TableHead>Превозно средство</TableHead> {/* New column */}
                   <TableHead>Статус</TableHead>
                   <TableHead>Цена</TableHead>
                   <TableHead>Дата</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {repairs.map((repair) => (
-                  <TableRow key={repair.id}>
-                    <TableCell>{repair.description}</TableCell>
-                    <TableCell>{repair.status}</TableCell>
-                    <TableCell>{repair.cost ? formatCurrency(repair.cost) : "-"}</TableCell>
-                    <TableCell>{new Date(repair.created_at).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
+                {repairs.map((repair) => {
+                  const associatedVehicle = vehicles?.find(v => v.id === repair.vehicle_id);
+                  return (
+                    <TableRow key={repair.id}>
+                      <TableCell>{repair.description}</TableCell>
+                      <TableCell>
+                        {associatedVehicle ? `${associatedVehicle.make} ${associatedVehicle.model} (${associatedVehicle.plate_number || '-'})` : '-'}
+                      </TableCell>
+                      <TableCell>{repair.status}</TableCell>
+                      <TableCell>{repair.cost ? formatCurrency(repair.cost) : "-"}</TableCell>
+                      <TableCell>{new Date(repair.created_at).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
@@ -309,6 +329,18 @@ const ClientDashboard = () => {
           isOpen={isEditVehicleDialogOpen}
           onOpenChange={setIsEditVehicleDialogOpen}
           vehicle={selectedVehicle}
+        />
+      )}
+
+      {/* New Vehicle Repairs Dialog */}
+      {client && selectedVehicleForRepairs && (
+        <VehicleRepairsDialog
+          isOpen={isVehicleRepairsDialogOpen}
+          onOpenChange={setIsVehicleRepairsDialogOpen}
+          clientId={client.id}
+          vehicleId={selectedVehicleForRepairs.id}
+          vehicleMake={selectedVehicleForRepairs.make}
+          vehicleModel={selectedVehicleForRepairs.model}
         />
       )}
     </div>
