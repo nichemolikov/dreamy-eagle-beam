@@ -25,6 +25,20 @@ const Header = ({ session }: HeaderProps) => {
     { name: "Контакти", path: "/contact" },
   ];
 
+  const handleProfileClick = () => {
+    if (isLoadingRole) return; // Prevent navigation if role is still loading
+
+    if (isAdmin) {
+      navigate("/admin/overview");
+    } else if (role === "client") {
+      navigate("/dashboard");
+    } else {
+      // Fallback for authenticated users with no specific role or unknown role
+      navigate("/dashboard");
+    }
+    setIsOpen(false); // Close mobile menu if open
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-700 bg-[#211f1f] py-4">
       <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
@@ -48,7 +62,7 @@ const Header = ({ session }: HeaderProps) => {
 
         <div className="hidden md:flex items-center gap-4">
           {isAuthenticated ? (
-            <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Профил</Button>
+            <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={handleProfileClick}>Профил</Button>
           ) : (
             <Button onClick={() => navigate("/login")} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
           )}
@@ -74,7 +88,7 @@ const Header = ({ session }: HeaderProps) => {
                 </Link>
               )}
               {isAuthenticated ? (
-                <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={() => setIsOpen(false)}>Профил</Button>
+                <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={handleProfileClick}>Профил</Button>
               ) : (
                 <Button onClick={() => { navigate("/login"); setIsOpen(false); }} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
               )}
