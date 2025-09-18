@@ -6,6 +6,7 @@ import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AddClientForm from "@/components/admin/AddClientForm";
+import ClientDetailsDialog from "@/components/admin/ClientDetailsDialog"; // Import the new component
 import { showError, showSuccess } from "@/utils/toast";
 
 interface Client {
@@ -25,6 +26,8 @@ interface Client {
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [isClientDetailsDialogOpen, setIsClientDetailsDialogOpen] = useState(false); // State for details dialog
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null); // State to hold the selected client ID
   const queryClient = useQueryClient();
 
   const { data: clients, isLoading, error } = useQuery<Client[]>({
@@ -49,6 +52,11 @@ const Clients = () => {
 
   const handleAddClientSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["clients"] });
+  };
+
+  const handleClientRowClick = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setIsClientDetailsDialogOpen(true);
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -111,7 +119,7 @@ const Clients = () => {
         <TableBody>
           {filteredClients.length > 0 ? (
             filteredClients.map((client) => (
-              <TableRow key={client.id}>
+              <TableRow key={client.id} onClick={() => handleClientRowClick(client.id)} className="cursor-pointer hover:bg-muted/50">
                 <TableCell className="font-medium">{client.name}</TableCell>
                 <TableCell>{client.phone || "-"}</TableCell>
                 <TableCell>{client.email || "-"}</TableCell>
@@ -120,10 +128,11 @@ const Clients = () => {
                 <TableCell>{client.vehicle_info?.vin || "-"}</TableCell>
                 <TableCell>{client.notes || "-"}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" className="mr-2">
+                  {/* Edit button can be re-purposed for direct client editing if needed */}
+                  <Button variant="ghost" size="sm" className="mr-2" onClick={(e) => { e.stopPropagation(); /* handle edit client details */ }}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client.id)}>
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClient(client.id); }}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </TableCell>
@@ -143,6 +152,12 @@ const Clients = () => {
         isOpen={isAddClientDialogOpen}
         onOpenChange={setIsAddClientDialogOpen}
         onSuccess={handleAddClientSuccess}
+      />
+
+      <ClientDetailsDialog
+        isOpen={isClientDetailsDialogOpen}
+        onOpenChange={setIsClientDetailsDialogOpen}
+        clientId={selectedClientId}
       />
     </div>
   );
