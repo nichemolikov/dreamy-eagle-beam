@@ -15,6 +15,8 @@ interface Repair {
   id: string;
   client_id: string;
   clients: { name: string } | null; // Joined client name
+  vehicle_id: string | null; // New field
+  vehicles: { make: string; model: string; plate_number: string | null } | null; // New field
   technician_id: string | null;
   description: string;
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
@@ -37,7 +39,7 @@ const Repairs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("repairs")
-        .select("*, clients(name)") // Select all repair fields and client name
+        .select("*, clients(name), vehicles(make, model, plate_number)") // Select all repair fields and client name, and vehicle details
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -49,6 +51,9 @@ const Repairs = () => {
     const matchesSearch =
       repair.description.toLowerCase().includes(lowerCaseSearchTerm) ||
       (repair.clients?.name && repair.clients.name.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (repair.vehicles?.make && repair.vehicles.make.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (repair.vehicles?.model && repair.vehicles.model.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (repair.vehicles?.plate_number && repair.vehicles.plate_number.toLowerCase().includes(lowerCaseSearchTerm)) ||
       (repair.notes && repair.notes.toLowerCase().includes(lowerCaseSearchTerm)) ||
       repair.id.toLowerCase().includes(lowerCaseSearchTerm);
 
@@ -107,7 +112,7 @@ const Repairs = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Търсене на ремонти по описание, клиент или ID..."
+            placeholder="Търсене на ремонти по описание, клиент, превозно средство или ID..."
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -132,6 +137,7 @@ const Repairs = () => {
           <TableRow>
             <TableHead>ID</TableHead>
             <TableHead>Клиент</TableHead>
+            <TableHead>Превозно средство</TableHead> {/* New TableHead */}
             <TableHead>Описание</TableHead>
             <TableHead>Статус</TableHead>
             <TableHead>Техник</TableHead>
@@ -146,6 +152,9 @@ const Repairs = () => {
               <TableRow key={repair.id}>
                 <TableCell className="font-medium">{repair.id.substring(0, 8)}...</TableCell>
                 <TableCell>{repair.clients?.name || "Неизвестен клиент"}</TableCell>
+                <TableCell>
+                  {repair.vehicles ? `${repair.vehicles.make} ${repair.vehicles.model} (${repair.vehicles.plate_number || "-"})` : "-"}
+                </TableCell> {/* New TableCell */}
                 <TableCell>{repair.description}</TableCell>
                 <TableCell>{repair.status}</TableCell>
                 <TableCell>{repair.technician_id ? repair.technician_id.substring(0, 8) + "..." : "-"}</TableCell>
@@ -163,7 +172,7 @@ const Repairs = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={9} className="h-24 text-center"> {/* Updated colspan */}
                 Няма намерени ремонти.
               </TableCell>
             </TableRow>

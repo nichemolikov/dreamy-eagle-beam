@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form"; // Import useWatch
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +40,7 @@ interface AddRepairFormProps {
 
 const formSchema = z.object({
   clientId: z.string().uuid({ message: "Моля, изберете клиент." }),
+  vehicleId: z.string().uuid({ message: "Моля, изберете валидно превозно средство." }).optional().or(z.literal('')), // New field
   description: z.string().min(5, { message: "Описанието е задължително и трябва да е поне 5 символа." }),
   status: z.enum(["Pending", "In Progress", "Completed", "Cancelled"], {
     message: "Моля, изберете валиден статус.",
@@ -57,6 +58,7 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientId: "",
+      vehicleId: "", // Initialize new field
       description: "",
       status: "Pending",
       cost: undefined,
@@ -64,6 +66,8 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
       technicianId: "",
     },
   });
+
+  const selectedClientId = useWatch({ control: form.control, name: "clientId" });
 
   const { data: clients, isLoading: isLoadingClients } = useQuery({
     queryKey: ["clients"],
@@ -74,17 +78,32 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
     },
   });
 
+  const { data: vehicles, isLoading: isLoadingVehicles } = useQuery({
+    queryKey: ["vehiclesForClient", selectedClientId],
+    queryFn: async () => {
+      if (!selectedClientId) return [];
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, make, model, plate_number")
+        .eq("client_id", selectedClientId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedClientId, // Only fetch vehicles if a client is selected
+  });
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { clientId, description, status, cost, notes, technicianId } = values;
+    const { clientId, vehicleId, description, status, cost, notes, technicianId } = values;
 
     try {
       const { data, error } = await supabase.from("repairs").insert({
         client_id: clientId,
+        vehicle_id: vehicleId || null, // Include vehicle_id
         description,
         status,
         cost: cost || null,
         notes: notes || null,
-        technician_id: technicianId || null, // Assuming technician_id is a UUID or null
+        technician_id: technicianId || null,
       }).select();
 
       if (error) {
@@ -118,7 +137,10 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Клиент</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue("vehicleId", ""); // Reset vehicle selection when client changes
+                  }} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Изберете клиент" />
@@ -134,6 +156,31 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
                           </SelectItem>
                         ))
                       )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="vehicleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Превозно средство (по избор)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedClientId || isLoadingVehicles}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedClientId ? (isLoadingVehicles ? "Зареждане на превозни средства..." : "Изберете превозно средство") : "Първо изберете клиент"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Без превозно средство</SelectItem> {/* Option for no vehicle */}
+                      {vehicles?.map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.make} {vehicle.model} ({vehicle.plate_number || "Без рег. номер"})
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
