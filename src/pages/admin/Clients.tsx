@@ -3,75 +3,82 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import AddClientForm from "@/components/admin/AddClientForm";
+import { showError, showSuccess } from "@/utils/toast";
 
 interface Client {
   id: string;
   name: string;
-  phone: string;
-  email: string;
+  phone: string | null;
+  email: string | null;
   vehicle_info: {
-    make: string;
-    model: string;
-    plate_number: string;
-    vin: string;
-  };
-  notes: string;
+    make: string | null;
+    model: string | null;
+    plate_number: string | null;
+    vin: string | null;
+  } | null;
+  notes: string | null;
 }
-
-const initialClients: Client[] = [
-  {
-    id: "1",
-    name: "Иван Петров",
-    phone: "0888123456",
-    email: "ivan.p@example.com",
-    vehicle_info: { make: "VW", model: "Golf", plate_number: "PB1234AB", vin: "WVWZZZ1KZEW123456" },
-    notes: "Редовен клиент",
-  },
-  {
-    id: "2",
-    name: "Мария Георгиева",
-    phone: "0899654321",
-    email: "maria.g@example.com",
-    vehicle_info: { make: "Audi", model: "A4", plate_number: "CA5678BC", vin: "WAUZZZ8KZEA654321" },
-    notes: "Нов клиент",
-  },
-  {
-    id: "3",
-    name: "Георги Димитров",
-    phone: "0877112233",
-    email: "georgi.d@example.com",
-    vehicle_info: { make: "BMW", model: "3 Series", plate_number: "CB9012CD", vin: "WBAZZZ3EZEB901234" },
-    notes: "Спешен ремонт",
-  },
-  {
-    id: "4",
-    name: "Елена Стоянова",
-    phone: "0898765432",
-    email: "elena.s@example.com",
-    vehicle_info: { make: "Mercedes-Benz", model: "C-Class", plate_number: "A3456EF", vin: "WDDZZZ204XF345678" },
-    notes: "Планово обслужване",
-  },
-];
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const filteredClients = initialClients.filter((client) => {
+  const { data: clients, isLoading, error } = useQuery<Client[]>({
+    queryKey: ["clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredClients = clients?.filter((client) => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return (
       client.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-      client.phone.includes(lowerCaseSearchTerm) ||
-      client.email.toLowerCase().includes(lowerCaseSearchTerm) ||
-      client.vehicle_info.plate_number.toLowerCase().includes(lowerCaseSearchTerm) ||
-      client.vehicle_info.vin.toLowerCase().includes(lowerCaseSearchTerm)
+      (client.phone && client.phone.includes(lowerCaseSearchTerm)) ||
+      (client.email && client.email.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (client.vehicle_info?.plate_number && client.vehicle_info.plate_number.toLowerCase().includes(lowerCaseSearchTerm)) ||
+      (client.vehicle_info?.vin && client.vehicle_info.vin.toLowerCase().includes(lowerCaseSearchTerm))
     );
-  });
+  }) || [];
+
+  const handleAddClientSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
+  };
+
+  const handleDeleteClient = async (clientId: string) => {
+    if (!window.confirm("Сигурни ли сте, че искате да изтриете този клиент?")) {
+      return;
+    }
+    try {
+      const { error } = await supabase.from("clients").delete().eq("id", clientId);
+      if (error) throw error;
+      showSuccess("Клиентът е изтрит успешно!");
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    } catch (error: any) {
+      console.error("Error deleting client:", error);
+      showError(`Грешка при изтриване на клиент: ${error.message}`);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Зареждане на клиенти...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-destructive">Грешка при зареждане на клиенти: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Управление на клиенти</h2>
-        <Button>
+        <Button onClick={() => setIsAddClientDialogOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" /> Добави клиент
         </Button>
       </div>
@@ -102,27 +109,41 @@ const Clients = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredClients.map((client) => (
-            <TableRow key={client.id}>
-              <TableCell className="font-medium">{client.name}</TableCell>
-              <TableCell>{client.phone}</TableCell>
-              <TableCell>{client.email}</TableCell>
-              <TableCell>{`${client.vehicle_info.make} ${client.vehicle_info.model}`}</TableCell>
-              <TableCell>{client.vehicle_info.plate_number}</TableCell>
-              <TableCell>{client.vehicle_info.vin}</TableCell>
-              <TableCell>{client.notes}</TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="sm" className="mr-2">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+          {filteredClients.length > 0 ? (
+            filteredClients.map((client) => (
+              <TableRow key={client.id}>
+                <TableCell className="font-medium">{client.name}</TableCell>
+                <TableCell>{client.phone || "-"}</TableCell>
+                <TableCell>{client.email || "-"}</TableCell>
+                <TableCell>{client.vehicle_info ? `${client.vehicle_info.make || ""} ${client.vehicle_info.model || ""}`.trim() || "-" : "-"}</TableCell>
+                <TableCell>{client.vehicle_info?.plate_number || "-"}</TableCell>
+                <TableCell>{client.vehicle_info?.vin || "-"}</TableCell>
+                <TableCell>{client.notes || "-"}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" className="mr-2">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={8} className="h-24 text-center">
+                Няма намерени клиенти.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
+
+      <AddClientForm
+        isOpen={isAddClientDialogOpen}
+        onOpenChange={setIsAddClientDialogOpen}
+        onSuccess={handleAddClientSuccess}
+      />
     </div>
   );
 };
