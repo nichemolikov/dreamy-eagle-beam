@@ -36,7 +36,7 @@ const Header = () => {
           {isAuthenticated ? (
             <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]">Профил</Button>
           ) : (
-            <Button onClick={() => navigate("/login")} variant="default">Вход за клиенти</Button>
+            <Button onClick={() => navigate("/login")} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
           )}
         </div>
 
@@ -57,7 +57,7 @@ const Header = () => {
               {isAuthenticated ? (
                 <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={() => setIsOpen(false)}>Профил</Button>
               ) : (
-                <Button onClick={() => { navigate("/login"); setIsOpen(false); }} variant="default">Вход за клиенти</Button>
+                <Button onClick={() => { navigate("/login"); setIsOpen(false); }} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
               )}
             </div>
           </SheetContent>
