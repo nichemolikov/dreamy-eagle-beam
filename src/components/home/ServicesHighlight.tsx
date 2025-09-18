@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Truck, Tire, Wrench, CarFront, Hammer, Globe } from "lucide-react"; // Добавени нови икони
+import { Truck, Disc, Wrench, CarFront, Hammer, Globe } from "lucide-react"; // Заменена Tire с Disc
 
 const services = [
   {
@@ -9,7 +9,7 @@ const services = [
     description: "Денонощна пътна помощ в Разград, България и цяла Европа. Предлагаме 24/7 репатрак услуги, смяна на гуми, подаване на ток и доставка на гориво. Бързо, надеждно и винаги на разположение!",
   },
   {
-    icon: <Tire className="h-8 w-8 text-primary" />,
+    icon: <Disc className="h-8 w-8 text-primary" />,
     title: "Мобилен Сервиз за Гуми",
     description: "Спукана гума на пътя или нямате резервна? Ние можем да я поправим, да доставим нова и да я монтираме на място.",
   },
