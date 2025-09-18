@@ -27,11 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Repair {
   id: string;
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
-  description: string; // Added for display in dialog title
+  description: string;
+  cost: number | null; // Added cost to the interface
 }
 
 interface EditRepairStatusFormProps {
@@ -42,16 +45,23 @@ interface EditRepairStatusFormProps {
 }
 
 const formSchema = z.object({
+  description: z.string().min(5, { message: "Описанието е задължително и трябва да е поне 5 символа." }),
   status: z.enum(["Pending", "In Progress", "Completed", "Cancelled"], {
     message: "Моля, изберете валиден статус.",
   }),
+  cost: z.preprocess(
+    (val) => (val === "" ? undefined : Number(val)),
+    z.number().min(0, { message: "Цената не може да бъде отрицателна." }).optional(),
+  ),
 });
 
 const EditRepairStatusForm = ({ isOpen, onOpenChange, repair, onSuccess }: EditRepairStatusFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      description: repair.description,
       status: repair.status,
+      cost: repair.cost || undefined, // Set default to undefined if null
     },
   });
 
@@ -59,19 +69,24 @@ const EditRepairStatusForm = ({ isOpen, onOpenChange, repair, onSuccess }: EditR
     try {
       const { error } = await supabase
         .from("repairs")
-        .update({ status: values.status, updated_at: new Date().toISOString() })
+        .update({
+          description: values.description,
+          status: values.status,
+          cost: values.cost || null, // Ensure null is sent if cost is undefined
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", repair.id);
 
       if (error) {
         throw error;
       }
 
-      showSuccess("Статусът на ремонта е актуализиран успешно!");
+      showSuccess("Ремонтът е актуализиран успешно!");
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error updating repair status:", error);
-      showError(`Грешка при актуализиране на статуса: ${error.message}`);
+      console.error("Error updating repair:", error);
+      showError(`Грешка при актуализиране на ремонта: ${error.message}`);
     }
   };
 
@@ -79,13 +94,26 @@ const EditRepairStatusForm = ({ isOpen, onOpenChange, repair, onSuccess }: EditR
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Редактирай статус на ремонт</DialogTitle>
+          <DialogTitle>Редактирай ремонт</DialogTitle>
           <DialogDescription>
-            Актуализирайте статуса за ремонт: "{repair.description}" (ID: {repair.id.substring(0, 8)}...)
+            Актуализирайте детайлите за ремонт: "{repair.description}" (ID: {repair.id.substring(0, 8)}...)
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Описание</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Кратко описание на ремонта..." rows={3} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="status"
@@ -105,6 +133,25 @@ const EditRepairStatusForm = ({ isOpen, onOpenChange, repair, onSuccess }: EditR
                       <SelectItem value="Cancelled">Отменен</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Цена (лв.)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={e => field.onChange(e.target.value === "" ? "" : Number(e.target.value))}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
