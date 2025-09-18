@@ -1,3 +1,4 @@
+profile -> auth.users relationship.">
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -60,7 +61,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
     queryFn: async () => {
       const { data: client, error: clientFetchError } = await supabase
         .from("clients")
-        .select("*, profiles(role), auth_users:user_id(email_confirmed_at)") // Fetch email_confirmed_at from auth.users
+        .select("*, profiles(role, auth_users:id(email_confirmed_at)))") // Corrected select statement
         .eq("id", clientId)
         .single();
 
@@ -88,7 +89,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       notes: clientData?.notes || "",
       role: (clientData?.profiles?.role as "client" | "admin") || "client",
       newPassword: "", // Always start empty for security
-      emailConfirmed: !!clientData?.auth_users?.email_confirmed_at, // Pre-fill based on current status
+      emailConfirmed: !!clientData?.profiles?.auth_users?.email_confirmed_at, // Pre-fill based on current status
     },
   });
 
