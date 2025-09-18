@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 
 interface EditClientFormProps {
@@ -60,12 +60,25 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
     queryFn: async () => {
       const { data: client, error: clientFetchError } = await supabase
         .from("clients")
-        .select("*, profiles(role, auth_users:id(email_confirmed_at)))") // Corrected select statement
+        .select("*, profiles(role)") // Only select role from profiles
         .eq("id", clientId)
         .single();
 
       if (clientFetchError) throw clientFetchError;
-      return client;
+
+      let emailConfirmed = false;
+      if (client?.user_id) {
+        // Fetch auth user details separately for email_confirmed_at
+        const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(client.user_id);
+        if (authUserError) {
+          console.error("Error fetching auth user details:", authUserError);
+          // Continue without emailConfirmed status if there's an error
+        } else if (authUser?.user) {
+          emailConfirmed = !!authUser.user.email_confirmed_at;
+        }
+      }
+
+      return { ...client, emailConfirmed }; // Combine client data with emailConfirmed status
     },
     enabled: isOpen && !!clientId,
   });
@@ -88,7 +101,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       notes: clientData?.notes || "",
       role: (clientData?.profiles?.role as "client" | "admin") || "client",
       newPassword: "", // Always start empty for security
-      emailConfirmed: !!clientData?.profiles?.auth_users?.email_confirmed_at, // Pre-fill based on current status
+      emailConfirmed: clientData?.emailConfirmed, // Pre-fill based on fetched status
     },
   });
 
