@@ -40,7 +40,7 @@ interface AddRepairFormProps {
 
 const formSchema = z.object({
   clientId: z.string().uuid({ message: "Моля, изберете клиент." }),
-  vehicleId: z.string().uuid({ message: "Моля, изберете валидно превозно средство." }).optional().or(z.literal('')), // New field
+  vehicleId: z.string().optional().or(z.literal('')), // New field, now allows empty string for form, but will be 'none' for select item
   description: z.string().min(5, { message: "Описанието е задължително и трябва да е поне 5 символа." }),
   status: z.enum(["Pending", "In Progress", "Completed", "Cancelled"], {
     message: "Моля, изберете валиден статус.",
@@ -58,7 +58,7 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientId: "",
-      vehicleId: "", // Initialize new field
+      vehicleId: "none", // Initialize new field with "none" to avoid empty string error
       description: "",
       status: "Pending",
       cost: undefined,
@@ -98,7 +98,7 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
     try {
       const { data, error } = await supabase.from("repairs").insert({
         client_id: clientId,
-        vehicle_id: vehicleId || null, // Include vehicle_id
+        vehicle_id: vehicleId === "none" ? null : vehicleId, // Convert "none" to null for database
         description,
         status,
         cost: cost || null,
@@ -139,7 +139,7 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
                   <FormLabel>Клиент</FormLabel>
                   <Select onValueChange={(value) => {
                     field.onChange(value);
-                    form.setValue("vehicleId", ""); // Reset vehicle selection when client changes
+                    form.setValue("vehicleId", "none"); // Reset vehicle selection to "none" when client changes
                   }} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -175,7 +175,7 @@ const AddRepairForm = ({ isOpen, onOpenChange, onSuccess }: AddRepairFormProps) 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Без превозно средство</SelectItem> {/* Option for no vehicle */}
+                      <SelectItem value="none">Без превозно средство</SelectItem> {/* Changed value to "none" */}
                       {vehicles?.map((vehicle) => (
                         <SelectItem key={vehicle.id} value={vehicle.id}>
                           {vehicle.make} {vehicle.model} ({vehicle.plate_number || "Без рег. номер"})
