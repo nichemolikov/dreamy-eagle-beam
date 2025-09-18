@@ -4,7 +4,9 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
-import { useEffect } from "react"; // Import useEffect
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button"; // Import Button
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 interface Client {
   id: string;
@@ -19,7 +21,7 @@ interface Client {
   } | null;
   notes: string | null;
   created_at: string;
-  user_id: string; // Added user_id to client interface
+  user_id: string;
 }
 
 interface Repair {
@@ -31,6 +33,8 @@ interface Repair {
 }
 
 const ClientDashboard = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -52,7 +56,7 @@ const ClientDashboard = () => {
         .from("clients")
         .select("*")
         .eq("user_id", user.id)
-        .single(); // Assuming one client entry per user
+        .single();
       if (error) {
         console.error("ClientDashboard: Error fetching client data:", error);
         throw error;
@@ -97,6 +101,10 @@ const ClientDashboard = () => {
     console.log("ClientDashboard: Error:", error);
   }, [user, client, repairs, isLoading, error]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login"); // Redirect to login page after logout
+  };
 
   if (isLoading) {
     return (
@@ -122,13 +130,17 @@ const ClientDashboard = () => {
         <p className="mt-4">
           Все още няма регистриран клиентски профил, свързан с вашия акаунт. Моля, свържете се с администратор.
         </p>
+        <Button onClick={handleLogout} className="mt-8">Изход</Button> {/* Logout button */}
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
-      <h1 className="text-3xl font-bold">Добре дошли, {client.name}!</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Добре дошли, {client.name}!</h1>
+        <Button onClick={handleLogout} variant="outline">Изход</Button> {/* Logout button */}
+      </div>
       <p className="text-muted-foreground">
         Тук можете да прегледате информацията за вашия автомобил и историята на ремонтите.
       </p>
