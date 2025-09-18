@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { Loader2 } from "lucide-react";
 
 interface EditClientFormProps {
@@ -46,7 +47,9 @@ const formSchema = z.object({
   phone: z.string().regex(/^[0-9\s\-+()]*$/, { message: "Моля, въведете валиден телефонен номер." }).min(5, { message: "Телефонният номер трябва да е поне 5 символа." }).optional().or(z.literal('')),
   email: z.string().email({ message: "Моля, въведете валиден имейл адрес." }).optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
-  role: z.enum(["client", "admin"], { message: "Моля, изберете валидна роля." }).optional(), // Role is optional as not all clients have a user_id
+  role: z.enum(["client", "admin"], { message: "Моля, изберете валидна роля." }).optional(),
+  newPassword: z.string().min(6, { message: "Паролата трябва да е поне 6 символа." }).optional().or(z.literal('')),
+  emailConfirmed: z.boolean().optional(),
 });
 
 const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClientFormProps) => {
@@ -57,7 +60,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
     queryFn: async () => {
       const { data: client, error: clientFetchError } = await supabase
         .from("clients")
-        .select("*, profiles(role)")
+        .select("*, profiles(role), auth_users:user_id(email_confirmed_at)") // Fetch email_confirmed_at from auth.users
         .eq("id", clientId)
         .single();
 
@@ -74,7 +77,9 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       phone: "",
       email: "",
       notes: "",
-      role: "client", // Default role
+      role: "client",
+      newPassword: "",
+      emailConfirmed: false,
     },
     values: {
       name: clientData?.name || "",
@@ -82,6 +87,8 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       email: clientData?.email || "",
       notes: clientData?.notes || "",
       role: (clientData?.profiles?.role as "client" | "admin") || "client",
+      newPassword: "", // Always start empty for security
+      emailConfirmed: !!clientData?.auth_users?.email_confirmed_at, // Pre-fill based on current status
     },
   });
 
@@ -118,10 +125,39 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
         }
       }
 
+      // Call Edge Function for password and email verification status if user_id exists
+      if (clientData?.user_id) {
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) {
+          throw new Error("No session token found for admin user.");
+        }
+
+        const edgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/admin-update-user`; // Replace with your project ID
+
+        const response = await fetch(edgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: clientData.user_id,
+            newPassword: values.newPassword || undefined, // Only send if not empty
+            emailConfirmed: values.emailConfirmed,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to update user authentication details.");
+        }
+      }
+
       showSuccess("Клиентът е актуализиран успешно!");
       queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client", clientId] }); // Invalidate client details
-      queryClient.invalidateQueries({ queryKey: ["clientForEdit", clientId] }); // Invalidate this form's data
+      queryClient.invalidateQueries({ queryKey: ["client", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["clientForEdit", clientId] });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -168,7 +204,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
         <DialogHeader>
           <DialogTitle>Редактирай клиент</DialogTitle>
           <DialogDescription>
-            Актуализирайте данните за клиента и неговата роля.
+            Актуализирайте данните за клиента, неговата роля, парола и статус на имейл.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -225,28 +261,66 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
                 </FormItem>
               )}
             />
-            {clientData?.user_id && ( // Only show role selection if client has a linked user_id
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Роля</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {clientData?.user_id && ( // Only show role, password, and email status if client has a linked user_id
+              <>
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Роля</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Изберете роля" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="client">Клиент</SelectItem>
+                          <SelectItem value="admin">Админ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Нова парола (оставете празно за да не променяте)</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Изберете роля" />
-                        </SelectTrigger>
+                        <Input type="password" placeholder="********" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="client">Клиент</SelectItem>
-                        <SelectItem value="admin">Админ</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="emailConfirmed"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Имейл потвърден
+                        </FormLabel>
+                        <FormDescription>
+                          Отметнете, за да потвърдите имейл адреса на потребителя.
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
             <Button type="submit" className="w-full">Запази промените</Button>
           </form>
