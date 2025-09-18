@@ -131,8 +131,7 @@ const Clients = () => {
                 <TableCell>{client.email || "-"}</TableCell>
                 <TableCell>{client.notes || "-"}</TableCell>
                 <TableCell className="text-right">
-                  {/* Edit button can be re-purposed for direct client editing if needed */}
-                  <Button variant="ghost" size="sm" className="mr-2" onClick={(e) => { e.stopPropagation(); /* handle edit client details */ }}>
+                  <Button variant="ghost" size="sm" className="mr-2" onClick={(e) => { e.stopPropagation(); handleClientRowClick(client.id); }}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClient(client.id); }}>
