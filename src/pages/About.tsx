@@ -4,7 +4,7 @@ const About = () => (
   <div>
     <section
       className="relative w-full h-[30vh] bg-cover bg-center"
-      style={{ backgroundImage: "url(/placeholder.svg)" }}
+      style={{ backgroundImage: "url(https://mertai.bg/wp-content/uploads/2025/09/viber_image_2025-07-29_13-43-45-541.jpg)" }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-transparent" />
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white p-4">
