@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
+import { useEffect } from "react"; // Import useEffect
 
 interface Client {
   id: string;
@@ -18,6 +19,7 @@ interface Client {
   } | null;
   notes: string | null;
   created_at: string;
+  user_id: string; // Added user_id to client interface
 }
 
 interface Repair {
@@ -41,13 +43,21 @@ const ClientDashboard = () => {
   const { data: client, isLoading: isLoadingClient, error: clientError } = useQuery<Client>({
     queryKey: ["clientData", user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!user?.id) {
+        console.log("ClientDashboard: No user ID, skipping client data fetch.");
+        return null;
+      }
+      console.log("ClientDashboard: Fetching client data for user ID:", user.id);
       const { data, error } = await supabase
         .from("clients")
         .select("*")
         .eq("user_id", user.id)
         .single(); // Assuming one client entry per user
-      if (error) throw error;
+      if (error) {
+        console.error("ClientDashboard: Error fetching client data:", error);
+        throw error;
+      }
+      console.log("ClientDashboard: Fetched client data:", data);
       return data;
     },
     enabled: !!user?.id,
@@ -56,13 +66,21 @@ const ClientDashboard = () => {
   const { data: repairs, isLoading: isLoadingRepairs, error: repairsError } = useQuery<Repair[]>({
     queryKey: ["clientRepairs", client?.id],
     queryFn: async () => {
-      if (!client?.id) return [];
+      if (!client?.id) {
+        console.log("ClientDashboard: No client ID, skipping repair data fetch.");
+        return [];
+      }
+      console.log("ClientDashboard: Fetching repair data for client ID:", client.id);
       const { data, error } = await supabase
         .from("repairs")
         .select("id, description, status, cost, created_at")
         .eq("client_id", client.id)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error("ClientDashboard: Error fetching repair data:", error);
+        throw error;
+      }
+      console.log("ClientDashboard: Fetched repair data:", data);
       return data;
     },
     enabled: !!client?.id,
@@ -70,6 +88,15 @@ const ClientDashboard = () => {
 
   const isLoading = isLoadingUser || isLoadingClient || isLoadingRepairs;
   const error = clientError || repairsError;
+
+  useEffect(() => {
+    console.log("ClientDashboard: Current user:", user);
+    console.log("ClientDashboard: Current client:", client);
+    console.log("ClientDashboard: Current repairs:", repairs);
+    console.log("ClientDashboard: Is loading:", isLoading);
+    console.log("ClientDashboard: Error:", error);
+  }, [user, client, repairs, isLoading, error]);
+
 
   if (isLoading) {
     return (
@@ -145,7 +172,7 @@ const ClientDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>История на ремонтите</CardTitle>
+            <CardTitle>История на ремонтите</CardTitle>
         </CardHeader>
         <CardContent>
           {repairs && repairs.length > 0 ? (
