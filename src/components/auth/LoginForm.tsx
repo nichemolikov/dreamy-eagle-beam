@@ -42,9 +42,11 @@ const LoginForm = () => {
     setIsSubmitting(true);
     try {
       let emailToSignIn = values.usernameOrEmail;
+      console.log("Attempting login for:", values.usernameOrEmail);
 
       // Check if it's a username (doesn't contain '@')
       if (!values.usernameOrEmail.includes('@')) {
+        console.log("Input is a username, resolving to email...");
         // Call Edge Function to resolve username to email
         const resolveUsernameEdgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/resolve-username-to-email`;
         
@@ -57,6 +59,7 @@ const LoginForm = () => {
         });
 
         const result = await response.json();
+        console.log("Edge Function response:", result);
 
         if (!response.ok) {
           throw new Error(result.error || "Невалидно потребителско име.");
@@ -66,6 +69,9 @@ const LoginForm = () => {
           throw new Error("Не може да се намери имейл, свързан с това потребителско име.");
         }
         emailToSignIn = result.email;
+        console.log("Resolved username to email:", emailToSignIn);
+      } else {
+        console.log("Input is an email:", emailToSignIn);
       }
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -129,8 +135,7 @@ const LoginForm = () => {
               )}
             </Button>
           </form>
-        </Form>
-      </CardContent>
+        </CardContent>
     </Card>
   );
 };
