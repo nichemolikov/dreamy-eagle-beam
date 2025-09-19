@@ -24,12 +24,12 @@ const AdminSidebar = ({ className }: AdminSidebarProps) => {
   };
 
   return (
-    <aside className={cn("w-64 bg-sidebar text-sidebar-foreground p-4 border-r border-sidebar-border flex flex-col", className)}>
+    <aside className={cn("w-64 bg-sidebar text-sidebar-foreground p-4 border-r border-sidebar-border flex flex-col h-full", className)}>
       <div className="flex items-center gap-2 mb-8">
         <img src="/logo.png" alt="MERT AI Logo" className="h-10" />
         <span className="text-xl font-semibold text-sidebar-primary-foreground">MERT AI Admin</span>
       </div>
-      <nav className="space-y-2 flex-grow"> {/* Use flex-grow to push logout to bottom */}
+      <nav className="space-y-2 flex-grow overflow-y-auto"> {/* Added overflow-y-auto here */}
         {navItems.map((item) => (
           <Link
             key={item.name}
