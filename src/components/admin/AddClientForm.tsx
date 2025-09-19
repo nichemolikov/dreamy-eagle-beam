@@ -59,24 +59,37 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { name, phone, email, vehicleMake, vehicleModel, plateNumber, vin, notes } = values;
 
-    const vehicle_info = {
-      make: vehicleMake || null,
-      model: vehicleModel || null,
-      plate_number: plateNumber || null,
-      vin: vin || null,
-    };
-
     try {
-      const { data, error } = await supabase.from("clients").insert({
+      // 1. Insert client data into the 'clients' table
+      const { data: clientData, error: clientError } = await supabase.from("clients").insert({
         name,
         phone: phone || null,
         email: email || null,
-        vehicle_info: vehicle_info,
         notes: notes || null,
-      }).select();
+      }).select("id").single(); // Select the ID of the newly created client
 
-      if (error) {
-        throw error;
+      if (clientError) {
+        throw clientError;
+      }
+
+      const newClientId = clientData.id;
+
+      // 2. If vehicle details are provided, insert into the 'vehicles' table
+      if (vehicleMake && vehicleModel) { // Only insert if make and model are provided
+        const { error: vehicleError } = await supabase.from("vehicles").insert({
+          client_id: newClientId,
+          make: vehicleMake,
+          model: vehicleModel,
+          plate_number: plateNumber || null,
+          vin: vin || null,
+          // year and color are not in this form, so they are not included here.
+        });
+
+        if (vehicleError) {
+          // If vehicle insertion fails, log the error but don't prevent client creation success
+          console.error("Error adding vehicle for new client:", vehicleError);
+          showError(`Клиентът е добавен, но възникна грешка при добавяне на превозното средство: ${vehicleError.message}`);
+        }
       }
 
       showSuccess("Клиентът е добавен успешно!");
