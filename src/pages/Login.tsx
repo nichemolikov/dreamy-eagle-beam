@@ -1,11 +1,10 @@
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import LoginForm from '@/components/auth/LoginForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -51,19 +50,7 @@ const Login = () => {
   // or has no defined role and should see the login form.
   return (
     <div className="container mx-auto p-4 md:p-8 flex justify-center items-center min-h-[calc(100vh-150px)]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Вход в клиентски портал</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Auth
-            supabaseClient={supabase}
-            providers={[]}
-            appearance={{ theme: ThemeSupa }}
-            theme="light"
-          />
-        </CardContent>
-      </Card>
+      <LoginForm />
     </div>
   );
 };

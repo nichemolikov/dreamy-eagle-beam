@@ -64,7 +64,10 @@ const Header = ({ session }: HeaderProps) => {
           {isAuthenticated ? (
             <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={handleProfileClick}>Профил</Button>
           ) : (
-            <Button onClick={() => navigate("/login")} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
+            <>
+              <Button onClick={() => navigate("/login")} className="bg-blue-400 text-white hover:bg-blue-500">Вход</Button>
+              <Button onClick={() => navigate("/register")} variant="outline" className="text-[#f1f1f1] border-blue-400 hover:bg-blue-400 hover:text-white">Регистрация</Button>
+            </>
           )}
         </div>
 
@@ -90,7 +93,10 @@ const Header = ({ session }: HeaderProps) => {
               {isAuthenticated ? (
                 <Button variant="ghost" className="text-[#f1f1f1] hover:bg-[#f1f1f1] hover:text-[#211f1f]" onClick={handleProfileClick}>Профил</Button>
               ) : (
-                <Button onClick={() => { navigate("/login"); setIsOpen(false); }} className="bg-blue-400 text-white hover:bg-blue-500">Вход за клиенти</Button>
+                <>
+                  <Button onClick={() => { navigate("/login"); setIsOpen(false); }} className="bg-blue-400 text-white hover:bg-blue-500">Вход</Button>
+                  <Button onClick={() => { navigate("/register"); setIsOpen(false); }} variant="outline" className="text-[#f1f1f1] border-blue-400 hover:bg-blue-400 hover:text-white">Регистрация</Button>
+                </>
               )}
             </div>
           </SheetContent>

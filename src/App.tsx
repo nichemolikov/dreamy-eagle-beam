@@ -17,6 +17,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Faq from "./pages/Faq";
 import Login from "./pages/Login";
+import Register from "./pages/Register"; // New import
 import ClientDashboard from "./pages/ClientDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} /> {/* New Route */}
                 
                 {/* Protected Routes for Clients and Admins */}
                 <Route element={<ProtectedRoute session={session} allowedRoles={["client", "admin"]} />}>
