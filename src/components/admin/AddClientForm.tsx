@@ -20,9 +20,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddClientFormProps {
   isOpen: boolean;
@@ -39,6 +41,46 @@ const formSchema = z.object({
   plateNumber: z.string().optional().or(z.literal('')),
   vin: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
+  
+  createAccount: z.boolean().default(false),
+  username: z.string().optional(),
+  password: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.createAccount) {
+    if (!data.email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Имейлът е задължителен за създаване на потребителски акаунт.",
+        path: ["email"],
+      });
+    }
+    if (!data.username) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Потребителското име е задължително за създаване на потребителски акаунт.",
+        path: ["username"],
+      });
+    } else if (!/^[a-zA-Z0-9_]+$/.test(data.username)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Потребителското име може да съдържа само букви, цифри и долни черти.",
+        path: ["username"],
+      });
+    }
+    if (!data.password) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Паролата е задължителна за създаване на потребителски акаунт.",
+        path: ["password"],
+      });
+    } else if (data.password.length < 6) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Паролата трябва да е поне 6 символа.",
+        path: ["password"],
+      });
+    }
+  }
 });
 
 const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) => {
@@ -53,40 +95,106 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
       plateNumber: "",
       vin: "",
       notes: "",
+      createAccount: false,
+      username: "",
+      password: "",
     },
   });
 
+  const createAccount = form.watch("createAccount");
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { name, phone, email, vehicleMake, vehicleModel, plateNumber, vin, notes } = values;
+    const { name, phone, email, vehicleMake, vehicleModel, plateNumber, vin, notes, createAccount, username, password } = values;
+    let newClientId: string;
+    let newUserId: string | null = null;
 
     try {
-      // 1. Insert client data into the 'clients' table
-      const { data: clientData, error: clientError } = await supabase.from("clients").insert({
-        name,
-        phone: phone || null,
-        email: email || null,
-        notes: notes || null,
-      }).select("id").single(); // Select the ID of the newly created client
+      if (createAccount) {
+        // 1. Create Supabase Auth user via Edge Function
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        if (!token) {
+          throw new Error("No session token found for admin user.");
+        }
 
-      if (clientError) {
-        throw clientError;
+        const adminCreateUserEdgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/admin-create-user`;
+
+        const response = await fetch(adminCreateUserEdgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            username: username,
+            firstName: name, // Use client name as first name for profile
+            lastName: "", // No last name in this form, can be added later
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create user account.");
+        }
+        newUserId = result.userId;
+
+        // The handle_new_user trigger will create the client and profile.
+        // We need to wait for it and then update the client with phone/notes.
+        // A small delay or polling might be needed in a real-world scenario,
+        // but for simplicity, we'll query immediately.
+        const { data: clientDataFromTrigger, error: clientFetchError } = await supabase
+          .from("clients")
+          .select("id")
+          .eq("user_id", newUserId)
+          .single();
+
+        if (clientFetchError || !clientDataFromTrigger) {
+          throw new Error("Failed to retrieve client created by trigger.");
+        }
+        newClientId = clientDataFromTrigger.id;
+
+        // Update the client with phone and notes
+        const { error: clientUpdateError } = await supabase
+          .from("clients")
+          .update({
+            phone: phone || null,
+            notes: notes || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", newClientId);
+
+        if (clientUpdateError) {
+          throw clientUpdateError;
+        }
+
+      } else {
+        // 1. Insert client data into the 'clients' table without a user_id
+        const { data: clientData, error: clientError } = await supabase.from("clients").insert({
+          name,
+          phone: phone || null,
+          email: email || null, // Email can still be stored even without an auth account
+          notes: notes || null,
+        }).select("id").single();
+
+        if (clientError) {
+          throw clientError;
+        }
+        newClientId = clientData.id;
       }
 
-      const newClientId = clientData.id;
-
       // 2. If vehicle details are provided, insert into the 'vehicles' table
-      if (vehicleMake && vehicleModel) { // Only insert if make and model are provided
+      if (vehicleMake && vehicleModel) {
         const { error: vehicleError } = await supabase.from("vehicles").insert({
           client_id: newClientId,
           make: vehicleMake,
           model: vehicleModel,
           plate_number: plateNumber || null,
           vin: vin || null,
-          // year and color are not in this form, so they are not included here.
         });
 
         if (vehicleError) {
-          // If vehicle insertion fails, log the error but don't prevent client creation success
           console.error("Error adding vehicle for new client:", vehicleError);
           showError(`Клиентът е добавен, но възникна грешка при добавяне на превозното средство: ${vehicleError.message}`);
         }
@@ -108,7 +216,7 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
         <DialogHeader>
           <DialogTitle>Добави нов клиент</DialogTitle>
           <DialogDescription>
-            Въведете данните за новия клиент и неговия автомобил.
+            Въведете данните за новия клиент и неговия автомобил. Можете също да създадете потребителски акаунт.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -139,19 +247,90 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
-              name="email"
+              name="createAccount"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Имейл</FormLabel>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Input type="email" placeholder="ivan.petrov@example.com" {...field} />
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Създай потребителски акаунт
+                    </FormLabel>
+                    <FormDescription>
+                      Ако е отметнато, ще бъде създаден потребителски акаунт, свързан с този клиент.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
+
+            {createAccount && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Потребителско име</FormLabel>
+                      <FormControl>
+                        <Input placeholder="потребителско_име" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Имейл (за акаунта)</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="ivan.petrov@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Парола</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="********" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {!createAccount && ( // Show email field if no account is being created, as it's just client data
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Имейл (само за данни на клиента)</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="ivan.petrov@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
