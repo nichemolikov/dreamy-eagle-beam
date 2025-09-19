@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Phone, Mail } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react"; // Added MapPin icon
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -101,6 +101,13 @@ const ContactPageContent = () => {
                 <h4 className="text-xl font-semibold">office@mertai.bg</h4>
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              <MapPin className="h-8 w-8 text-primary" />
+              <div>
+                <h4 className="text-xl font-semibold">Разград, България</h4>
+                <p className="text-muted-foreground">Посетете ни на място!</p>
+              </div>
+            </div>
           </div>
 
           {/* Contact Form */}
@@ -183,6 +190,23 @@ const ContactPageContent = () => {
               </Form>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Google Maps Embed */}
+        <div className="mt-16 text-center">
+          <h3 className="text-2xl font-bold tracking-tighter sm:text-3xl mb-6">Нашето местоположение</h3>
+          <div className="relative h-[400px] w-full overflow-hidden rounded-lg shadow-lg">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m14!1m7!3m6!1s0x40af0ff7243adfbb:0xfb36a5df8e893fa8!2sMert-Ai+EOOD!8m2!3d43.5438042!4d26.5059486!16s%2Fg%2F11nt3vs7hk!3m5!1s0x40af0ff7243adfbb:0xfb36a5df8e893fa8!8m2!3d43.5438042!4d26.5059486!16s%2Fg%2F11nt3vs7hk?entry=ttu"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Mert-Ai EOOD Location"
+            ></iframe>
+          </div>
         </div>
       </div>
     </section>
