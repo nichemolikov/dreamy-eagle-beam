@@ -7,7 +7,7 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: ["unsuspectfully-idiographic-merideth.ngrok-free.app"], // Добавен разрешен хост
+    allowedHosts: ["https://96f738d88bf0.ngrok-free.app"], // Добавен разрешен хост
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {
