@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added this import
 
 const formSchema = z.object({
   usernameOrEmail: z.string().min(1, { message: "Потребителско име или имейл е задължително." }),
