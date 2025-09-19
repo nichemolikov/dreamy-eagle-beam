@@ -29,7 +29,7 @@ const generateCaptcha = () => {
   };
 };
 
-const ContactSection = () => {
+const ContactPageContent = () => {
   const [captcha, setCaptcha] = useState(generateCaptcha());
 
   const formSchema = z.object({
@@ -189,4 +189,4 @@ const ContactSection = () => {
   );
 };
 
-export default ContactSection;
+export default ContactPageContent;
