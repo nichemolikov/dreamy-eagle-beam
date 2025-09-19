@@ -34,7 +34,7 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profileData) {
-      console.warn(`resolve-username-to-email: No profile found for username: ${username}`);
+      console.warn(`resolve-username-to-email: No profile found for username: ${username}, Error: ${profileError?.message || 'Not found'}`);
       return new Response(JSON.stringify({ error: 'Invalid username' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
