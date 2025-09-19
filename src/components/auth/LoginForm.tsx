@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Removed Card, CardContent, CardHeader, CardTitle imports
 
 const formSchema = z.object({
   usernameOrEmail: z.string().min(1, { message: "Потребителско име или имейл е задължително." }),
@@ -94,11 +94,11 @@ const LoginForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-center">Вход</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-center">Вход</h2>
+      </div>
+      <div className="space-y-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -135,8 +135,9 @@ const LoginForm = () => {
               )}
             </Button>
           </form>
-        </CardContent>
-    </Card>
+        </Form>
+      </div>
+    </div>
   );
 };
 
