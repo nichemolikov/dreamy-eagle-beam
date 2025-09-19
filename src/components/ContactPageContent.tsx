@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Phone, Mail, MapPin } from "lucide-react"; // Added MapPin icon
-import { useForm } from "@hookform/react";
+import { useForm } from "react-hook-form"; // Corrected import path
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
