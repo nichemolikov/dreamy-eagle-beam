@@ -45,24 +45,27 @@ const LoginForm = () => {
 
       // Check if it's a username (doesn't contain '@')
       if (!values.usernameOrEmail.includes('@')) {
-        // Query profiles table to find the email associated with the username
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id') // We only need the user_id which is 'id' in profiles
-          .eq('username', values.usernameOrEmail)
-          .single();
+        // Call Edge Function to resolve username to email
+        const resolveUsernameEdgeFunctionUrl = `https://hemkredzinaipjxnyqco.supabase.co/functions/v1/resolve-username-to-email`;
+        
+        const response = await fetch(resolveUsernameEdgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: values.usernameOrEmail }),
+        });
 
-        if (profileError || !profileData) {
-          throw new Error("Невалидно потребителско име или имейл.");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Невалидно потребителско име.");
         }
-
-        // Now get the actual email from auth.users using the profile ID
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profileData.id);
-
-        if (userError || !userData?.user?.email) {
+        
+        if (!result.email) {
           throw new Error("Не може да се намери имейл, свързан с това потребителско име.");
         }
-        emailToSignIn = userData.user.email;
+        emailToSignIn = result.email;
       }
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -126,14 +129,7 @@ const LoginForm = () => {
               )}
             </Button>
           </form>
-        </Form>
-        <div className="mt-4 text-center text-sm">
-          Нямате акаунт?{" "}
-          <Button variant="link" onClick={() => navigate("/register")} className="p-0 h-auto">
-            Регистрирайте се
-          </Button>
-        </div>
-      </CardContent>
+        </CardContent>
     </Card>
   );
 };
