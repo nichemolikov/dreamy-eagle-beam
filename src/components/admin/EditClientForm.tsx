@@ -48,6 +48,7 @@ const formSchema = z.object({
   phone: z.string().regex(/^[0-9\s\-+()]*$/, { message: "Моля, въведете валиден телефонен номер." }).min(5, { message: "Телефонният номер трябва да е поне 5 символа." }).optional().or(z.literal('')),
   email: z.string().email({ message: "Моля, въведете валиден имейл адрес." }).optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
+  username: z.string().min(3, { message: "Потребителското име трябва да е поне 3 символа." }).regex(/^[a-zA-Z0-9_]+$/, { message: "Потребителското име може да съдържа само букви, цифри и долни черти." }).optional().or(z.literal('')),
   role: z.enum(["client", "admin"], { message: "Моля, изберете валидна роля." }).optional(),
   newPassword: z.string().min(6, { message: "Паролата трябва да е поне 6 символа." }).optional().or(z.literal('')),
   emailConfirmed: z.boolean().optional(),
@@ -61,7 +62,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
     queryFn: async () => {
       const { data: client, error: clientFetchError } = await supabase
         .from("clients")
-        .select("*, profiles(role)") // Only select role from profiles
+        .select("*, profiles(role, username)") // Select role AND username from profiles
         .eq("id", clientId)
         .single();
 
@@ -107,6 +108,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       phone: "",
       email: "",
       notes: "",
+      username: "", // Default for username
       role: "client",
       newPassword: "",
       emailConfirmed: false,
@@ -116,6 +118,7 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
       phone: clientData?.phone || "",
       email: clientData?.email || "",
       notes: clientData?.notes || "",
+      username: clientData?.profiles?.username || "", // Pre-fill username
       role: (clientData?.profiles?.role as "client" | "admin") || "client",
       newPassword: "", // Always start empty for security
       emailConfirmed: clientData?.emailConfirmed, // Pre-fill based on fetched status
@@ -140,14 +143,22 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
         throw clientUpdateError;
       }
 
-      // Update profiles table if a role is provided and client has a user_id
-      if (clientData?.user_id && values.role) {
+      // Update profiles table if a role or username is provided and client has a user_id
+      if (clientData?.user_id) {
+        const profileUpdatePayload: { role?: "client" | "admin"; username?: string | null; updated_at: string } = {
+          updated_at: new Date().toISOString(),
+        };
+
+        if (values.role) {
+          profileUpdatePayload.role = values.role;
+        }
+        if (values.username !== undefined) {
+          profileUpdatePayload.username = values.username || null;
+        }
+
         const { error: profileUpdateError } = await supabase
           .from("profiles")
-          .update({
-            role: values.role,
-            updated_at: new Date().toISOString(),
-          })
+          .update(profileUpdatePayload)
           .eq("id", clientData.user_id);
 
         if (profileUpdateError) {
@@ -291,8 +302,21 @@ const EditClientForm = ({ isOpen, onOpenChange, clientId, onSuccess }: EditClien
                 </FormItem>
               )}
             />
-            {clientData?.user_id && ( // Only show role, password, and email status if client has a linked user_id
+            {clientData?.user_id && ( // Only show role, password, email status, and username if client has a linked user_id
               <>
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Потребителско име</FormLabel>
+                      <FormControl>
+                        <Input placeholder="потребителско_име" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="role"
