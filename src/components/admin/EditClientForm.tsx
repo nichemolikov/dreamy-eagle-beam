@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-hot-toast";
+import { showSuccess, showError } from "@/utils/toast"; // Използваме съществуващите помощни функции за тостове
 import { supabase } from "@/integrations/supabase/client";
 
 // Define schema for client data
@@ -85,12 +85,12 @@ export function EditClientForm({ client, onSuccess }: EditClientFormProps) {
         throw profileError;
       }
 
-      toast.success("Клиентът и ролята са актуализирани успешно!");
+      showSuccess("Клиентът и ролята са актуализирани успешно!");
       onSuccess();
 
     } catch (error: any) {
       console.error("Error updating client or profile:", error);
-      toast.error(`Грешка при актуализиране: ${error.message || "Неизвестна грешка"}`);
+      showError(`Грешка при актуализиране: ${error.message || "Неизвестна грешка"}`);
     }
   }
 
