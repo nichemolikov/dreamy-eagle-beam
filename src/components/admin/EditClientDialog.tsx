@@ -35,7 +35,7 @@ export function EditClientDialog({ isOpen, onOpenChange, client, onSuccess }: Ed
             Направете промени в профила на клиента тук. Кликнете запази, когато сте готови.
           </DialogDescription>
         </DialogHeader>
-        <EditClientForm client={client} onSuccess={onSuccess} />
+        <EditClientForm client={client} onSuccess={onSuccess} onOpenChange={onOpenChange} isOpen={isOpen} />
       </DialogContent>
     </Dialog>
   );

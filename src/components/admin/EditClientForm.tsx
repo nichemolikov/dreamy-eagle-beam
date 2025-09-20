@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast"; // Използваме съществуващите помощни функции за тостове
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query"; // Add this import
 
 // Define schema for client data
 const clientFormSchema = z.object({
@@ -33,6 +34,8 @@ const clientFormSchema = z.object({
 type ClientFormValues = z.infer<typeof clientFormSchema>;
 
 interface EditClientFormProps {
+  isOpen: boolean; // Keep isOpen and onOpenChange for the dialog wrapper
+  onOpenChange: (open: boolean) => void; // Keep for the dialog wrapper
   client: {
     id: string; // client_id from public.clients
     user_id: string; // user_id from public.clients, which is also id from auth.users and public.profiles
@@ -45,7 +48,8 @@ interface EditClientFormProps {
   onSuccess: () => void;
 }
 
-export function EditClientForm({ client, onSuccess }: EditClientFormProps) {
+export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFormProps) {
+  const queryClient = useQueryClient(); // Initialize useQueryClient
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -87,6 +91,10 @@ export function EditClientForm({ client, onSuccess }: EditClientFormProps) {
 
       showSuccess("Клиентът и ролята са актуализирани успешно!");
       onSuccess();
+      onOpenChange(false); // Close the dialog on success
+
+      // Invalidate the userRole query to force a re-fetch across the app
+      queryClient.invalidateQueries({ queryKey: ["userRole"] });
 
     } catch (error: any) {
       console.error("Error updating client or profile:", error);
