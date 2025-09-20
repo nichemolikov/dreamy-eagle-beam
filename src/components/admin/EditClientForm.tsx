@@ -16,9 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { showSuccess, showError } from "@/utils/toast"; // Използваме съществуващите помощни функции за тостове
+import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query"; // Add this import
+import { useQueryClient } from "@tanstack/react-query";
 
 // Define schema for client data
 const clientFormSchema = z.object({
@@ -34,22 +34,22 @@ const clientFormSchema = z.object({
 type ClientFormValues = z.infer<typeof clientFormSchema>;
 
 interface EditClientFormProps {
-  isOpen: boolean; // Keep isOpen and onOpenChange for the dialog wrapper
-  onOpenChange: (open: boolean) => void; // Keep for the dialog wrapper
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   client: {
-    id: string; // client_id from public.clients
-    user_id: string; // user_id from public.clients, which is also id from auth.users and public.profiles
+    id: string;
+    user_id: string;
     name: string;
     phone?: string;
     email?: string;
     notes?: string;
-    role: "client" | "admin"; // role from public.profiles
+    role: "client" | "admin";
   };
   onSuccess: () => void;
 }
 
 export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFormProps) {
-  const queryClient = useQueryClient(); // Initialize useQueryClient
+  const queryClient = useQueryClient();
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: {
@@ -57,13 +57,13 @@ export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFo
       phone: client.phone || "",
       email: client.email || "",
       notes: client.notes || "",
-      role: client.role, // Initialize with current client's role from profiles
+      role: client.role,
     },
   });
 
   async function onSubmit(values: ClientFormValues) {
     try {
-      // 1. Update the clients table
+      // 1. Update the clients table (client's personal info)
       const { error: clientError } = await supabase
         .from("clients")
         .update({
@@ -72,7 +72,7 @@ export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFo
           email: values.email,
           notes: values.notes,
         })
-        .eq("id", client.id); // Update client record by client.id
+        .eq("id", client.id);
 
       if (clientError) {
         throw clientError;
@@ -83,7 +83,7 @@ export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFo
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ role: values.role })
-        .eq("id", client.user_id); // Update profile record by client.user_id
+        .eq("id", client.user_id); // <--- This is the code that updates the role
 
       if (profileError) {
         throw profileError;
@@ -91,7 +91,7 @@ export function EditClientForm({ client, onSuccess, onOpenChange }: EditClientFo
 
       showSuccess("Клиентът и ролята са актуализирани успешно!");
       onSuccess();
-      onOpenChange(false); // Close the dialog on success
+      onOpenChange(false);
 
       // Invalidate the userRole query to force a re-fetch across the app
       queryClient.invalidateQueries({ queryKey: ["userRole"] });
