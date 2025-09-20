@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import EditClientForm from "./EditClientForm"; // Import the new form
+import { EditClientForm } from "./EditClientForm"; // Corrected import: changed to named import
 
 interface ClientDetailsDialogProps {
   isOpen: boolean;
