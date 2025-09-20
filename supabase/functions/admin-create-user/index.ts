@@ -53,7 +53,7 @@ serve(async (req) => {
       });
     }
 
-    const { email, password, username, firstName, lastName } = await req.json();
+    const { email, password, username, firstName, lastName, role } = await req.json(); // Add role
 
     if (!email || !password) {
       return new Response(JSON.stringify({ error: 'Email and password are required to create a user account.' }), {
@@ -70,6 +70,7 @@ serve(async (req) => {
         username: username || null,
         first_name: firstName || null,
         last_name: lastName || null,
+        role: role || 'client', // Pass role, default to 'client' if not provided
       },
     });
 

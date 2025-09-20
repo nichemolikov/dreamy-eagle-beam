@@ -25,6 +25,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddClientFormProps {
   isOpen: boolean;
@@ -45,6 +52,7 @@ const formSchema = z.object({
   createAccount: z.boolean().default(false),
   username: z.string().optional(),
   password: z.string().optional(),
+  accountRole: z.enum(["client", "admin"]).optional(), // New field for role
 }).superRefine((data, ctx) => {
   if (data.createAccount) {
     if (!data.email) {
@@ -80,6 +88,13 @@ const formSchema = z.object({
         path: ["password"],
       });
     }
+    if (!data.accountRole) { // Validate role selection
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Моля, изберете роля за новия акаунт.",
+        path: ["accountRole"],
+      });
+    }
   }
 });
 
@@ -98,19 +113,19 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
       createAccount: false,
       username: "",
       password: "",
+      accountRole: "client", // Default role
     },
   });
 
   const createAccount = form.watch("createAccount");
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { name, phone, email, vehicleMake, vehicleModel, plateNumber, vin, notes, createAccount, username, password } = values;
+    const { name, phone, email, vehicleMake, vehicleModel, plateNumber, vin, notes, createAccount, username, password, accountRole } = values; // Destructure accountRole
     let newClientId: string;
     let newUserId: string | null = null;
 
     try {
       if (createAccount) {
-        // 1. Create Supabase Auth user via Edge Function
         const token = (await supabase.auth.getSession()).data.session?.access_token;
         if (!token) {
           throw new Error("No session token found for admin user.");
@@ -128,8 +143,9 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
             email: email,
             password: password,
             username: username,
-            firstName: name, // Use client name as first name for profile
-            lastName: "", // No last name in this form, can be added later
+            firstName: name,
+            lastName: "",
+            role: accountRole, // Pass the selected role
           }),
         });
 
@@ -140,10 +156,6 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
         }
         newUserId = result.userId;
 
-        // The handle_new_user trigger will create the client and profile.
-        // We need to wait for it and then update the client with phone/notes.
-        // A small delay or polling might be needed in a real-world scenario,
-        // but for simplicity, we'll query immediately.
         const { data: clientDataFromTrigger, error: clientFetchError } = await supabase
           .from("clients")
           .select("id")
@@ -155,11 +167,12 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
         }
         newClientId = clientDataFromTrigger.id;
 
-        // Update the client with phone and notes
         const { error: clientUpdateError } = await supabase
           .from("clients")
           .update({
+            name: name, // Ensure name is updated from form, as trigger might use email if first/last name are empty
             phone: phone || null,
+            email: email || null, // Update email in clients table as well
             notes: notes || null,
             updated_at: new Date().toISOString(),
           })
@@ -170,11 +183,10 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
         }
 
       } else {
-        // 1. Insert client data into the 'clients' table without a user_id
         const { data: clientData, error: clientError } = await supabase.from("clients").insert({
           name,
           phone: phone || null,
-          email: email || null, // Email can still be stored even without an auth account
+          email: email || null,
           notes: notes || null,
         }).select("id").single();
 
@@ -184,7 +196,6 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
         newClientId = clientData.id;
       }
 
-      // 2. If vehicle details are provided, insert into the 'vehicles' table
       if (vehicleMake && vehicleModel) {
         const { error: vehicleError } = await supabase.from("vehicles").insert({
           client_id: newClientId,
@@ -308,6 +319,27 @@ const AddClientForm = ({ isOpen, onOpenChange, onSuccess }: AddClientFormProps) 
                       <FormControl>
                         <Input type="password" placeholder="********" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField // New role selection field
+                  control={form.control}
+                  name="accountRole"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Роля на акаунта</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Изберете роля" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="client">Клиент</SelectItem>
+                          <SelectItem value="admin">Админ</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
