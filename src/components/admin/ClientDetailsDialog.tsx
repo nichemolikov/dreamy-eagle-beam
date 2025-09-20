@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { EditClientForm } from "./EditClientForm"; // Corrected import: changed to named import
+import { EditClientForm } from "./EditClientForm";
 
 interface ClientDetailsDialogProps {
   isOpen: boolean;
@@ -27,7 +27,8 @@ interface Client {
   email: string | null;
   notes: string | null;
   created_at: string;
-  user_id: string | null; // Added user_id for consistency
+  user_id: string | null;
+  role: "client" | "admin" | null; // Added role
 }
 
 interface Repair {
@@ -57,10 +58,19 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
     queryKey: ["client", clientId],
     queryFn: async () => {
       if (!clientId) return null;
-      // Explicitly select columns to avoid implicit joins to auth.users
-      const { data, error } = await supabase.from("clients").select("id, user_id, name, phone, email, notes, created_at, updated_at").eq("id", clientId).single();
+      // Select client data and join with profiles to get role
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, user_id, name, phone, email, notes, created_at, updated_at, profiles(role)")
+        .eq("id", clientId)
+        .single();
       if (error) throw error;
-      return data;
+      
+      // Flatten the data to match the Client interface
+      return {
+        ...data,
+        role: data.profiles?.role || null, // Extract role from nested profiles object
+      };
     },
     enabled: !!clientId, // Only run query if clientId is available
   });
@@ -101,6 +111,7 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
   const handleEditClientSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["client", clientId] }); // Refresh client details in this dialog
     queryClient.invalidateQueries({ queryKey: ["clients"] }); // Refresh the main clients list
+    setIsEditClientFormOpen(false); // Close the edit form after success
   };
 
   return (
@@ -138,6 +149,7 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
                   <p><strong>Телефон:</strong> {client.phone || "-"}</p>
                   <p><strong>Имейл:</strong> {client.email || "-"}</p>
                   <p><strong>Създаден на:</strong> {new Date(client.created_at).toLocaleDateString()}</p>
+                  <p><strong>Роля:</strong> {client.role || "-"}</p> {/* Display role */}
                 </div>
                 {client.notes && (
                   <div>
@@ -209,11 +221,11 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
         </DialogContent>
       </Dialog>
 
-      {clientId && (
+      {client && ( // Ensure client data is loaded before rendering EditClientForm
         <EditClientForm
           isOpen={isEditClientFormOpen}
           onOpenChange={setIsEditClientFormOpen}
-          clientId={clientId}
+          client={client} // Pass the full client object
           onSuccess={handleEditClientSuccess}
         />
       )}
