@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { EditClientForm } from "./EditClientForm";
+import { EditClientDialog } from "./EditClientDialog"; // Corrected import: using the new dialog wrapper
 
 interface ClientDetailsDialogProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ interface Client {
   notes: string | null;
   created_at: string;
   user_id: string | null;
-  role: "client" | "admin" | null; // Added role
+  role: "client" | "admin"; // Role is now guaranteed to be non-null for the form
 }
 
 interface Repair {
@@ -66,10 +66,10 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
         .single();
       if (error) throw error;
       
-      // Flatten the data to match the Client interface
+      // Flatten the data and ensure role is always 'client' or 'admin'
       return {
         ...data,
-        role: data.profiles?.role || null, // Extract role from nested profiles object
+        role: (data.profiles?.role as "client" | "admin") || "client", // Default to 'client' if null
       };
     },
     enabled: !!clientId, // Only run query if clientId is available
@@ -221,8 +221,8 @@ const ClientDetailsDialog = ({ isOpen, onOpenChange, clientId }: ClientDetailsDi
         </DialogContent>
       </Dialog>
 
-      {client && ( // Ensure client data is loaded before rendering EditClientForm
-        <EditClientForm
+      {client && ( // Ensure client data is loaded before rendering EditClientDialog
+        <EditClientDialog
           isOpen={isEditClientFormOpen}
           onOpenChange={setIsEditClientFormOpen}
           client={client} // Pass the full client object
